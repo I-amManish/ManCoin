@@ -1,19 +1,34 @@
 import { useState } from "react";
 import axios from "axios";
+import SHA256 from "crypto-js/sha256";
+import { ec as EC } from "elliptic";
+
+const ec = new EC("secp256k1");
 
 function Transaction() {
 
-  const [fromAddress, setFromAddress] = useState("");
-  const [toAddress, setToAddress] = useState("");
-  const [amount, setAmount] = useState("");
-  const [message, setMessage] = useState("");
+  const [fromAddress, setFromAddress] =
+    useState("");
+
+  const [toAddress, setToAddress] =
+    useState("");
+
+  const [amount, setAmount] =
+    useState("");
+
+  const [privateKey, setPrivateKey] =
+    useState("");
+
+  const [message, setMessage] =
+    useState("");
 
   const handleTransaction = async () => {
 
     if (
       !fromAddress ||
       !toAddress ||
-      !amount
+      !amount ||
+      !privateKey
     ) {
       setMessage(
         "Please fill all fields"
@@ -23,14 +38,46 @@ function Transaction() {
 
     try {
 
-      const res = await axios.post(
-        "http://localhost:5000/transaction",
-        {
-          fromAddress,
-          toAddress,
-          amount: Number(amount)
-        }
-      );
+      const key =
+        ec.keyFromPrivate(
+          privateKey
+        );
+
+      const publicKey =
+        key.getPublic("hex");
+
+      if (
+        publicKey !== fromAddress
+      ) {
+        setMessage(
+          "Private key does not match From Address"
+        );
+        return;
+      }
+
+      const hashTx =
+        SHA256(
+          fromAddress +
+          toAddress +
+          Number(amount)
+        ).toString();
+
+      const signature =
+        key
+          .sign(hashTx, "base64")
+          .toDER("hex");
+
+      const res =
+        await axios.post(
+          "http://localhost:5000/transaction",
+          {
+            fromAddress,
+            toAddress,
+            amount:
+              Number(amount),
+            signature
+          }
+        );
 
       setMessage(
         res.data.message
@@ -39,6 +86,7 @@ function Transaction() {
       setFromAddress("");
       setToAddress("");
       setAmount("");
+      setPrivateKey("");
 
     } catch (error) {
 
@@ -65,7 +113,9 @@ function Transaction() {
           placeholder="From Address"
           value={fromAddress}
           onChange={(e) =>
-            setFromAddress(e.target.value)
+            setFromAddress(
+              e.target.value
+            )
           }
           className="w-full p-3 rounded-lg bg-slate-700 mb-4"
         />
@@ -75,7 +125,9 @@ function Transaction() {
           placeholder="To Address"
           value={toAddress}
           onChange={(e) =>
-            setToAddress(e.target.value)
+            setToAddress(
+              e.target.value
+            )
           }
           className="w-full p-3 rounded-lg bg-slate-700 mb-4"
         />
@@ -85,13 +137,29 @@ function Transaction() {
           placeholder="Amount"
           value={amount}
           onChange={(e) =>
-            setAmount(e.target.value)
+            setAmount(
+              e.target.value
+            )
+          }
+          className="w-full p-3 rounded-lg bg-slate-700 mb-4"
+        />
+
+        <input
+          type="text"
+          placeholder="Private Key"
+          value={privateKey}
+          onChange={(e) =>
+            setPrivateKey(
+              e.target.value
+            )
           }
           className="w-full p-3 rounded-lg bg-slate-700 mb-4"
         />
 
         <button
-          onClick={handleTransaction}
+          onClick={
+            handleTransaction
+          }
           className="
             bg-green-600
             hover:bg-green-700
@@ -101,7 +169,7 @@ function Transaction() {
             font-semibold
           "
         >
-          Send Transaction
+          Send Signed Transaction
         </button>
 
         {message && (

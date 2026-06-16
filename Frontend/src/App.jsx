@@ -5,6 +5,8 @@ import Explorer from "./pages/Explorer";
 import Mine from "./pages/Mine";
 import Transaction from "./pages/Transaction";
 import Wallet from "./pages/Wallet";
+import WalletGenerator
+from "./pages/WalletGenerator";
 
 import {
   Routes,
@@ -45,6 +47,11 @@ function App() {
             path="/wallet"
             element={<Wallet />}
           />
+
+          <Route
+  path="/wallet-generator"
+  element={<WalletGenerator />}
+/>
 
         </Routes>
 

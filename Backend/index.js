@@ -1,57 +1,108 @@
-const Blockchain = require("./Blockchain");
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
+
+const Blockchain = require("./Blockchain");
+const Transaction = require("./Transaction");
+
+const connectDB = require("./config/db");
+const BlockchainModel =
+    require("./models/BlockchainModel");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Load Blockchain From File
 let manCoin;
 
-if (fs.existsSync("blockchain.json")) {
+// Initialize Blockchain
+const initializeBlockchain = async () => {
 
-    const data = fs.readFileSync(
-        "blockchain.json",
-        "utf8"
-    );
+    await connectDB();
 
-    if (
-        data &&
-        data.trim() !== "" &&
-        data.trim() !== "{}"
-    ) {
+    let blockchainData =
+        await BlockchainModel.findOne();
 
-        const savedBlockchain =
-            JSON.parse(data);
+    if (!blockchainData) {
 
-        manCoin = Object.assign(
-            new Blockchain(),
-            savedBlockchain
+        manCoin =
+            new Blockchain();
+
+        blockchainData =
+            new BlockchainModel({
+                chain:
+                    manCoin.chain,
+                difficulty:
+                    manCoin.difficulty,
+                pendingTransactions:
+                    manCoin.pendingTransactions,
+                miningReward:
+                    manCoin.miningReward
+            });
+
+        await blockchainData.save();
+
+        console.log(
+            "New blockchain created"
         );
 
     } else {
 
-        manCoin = new Blockchain();
+        manCoin =
+            Object.assign(
+                new Blockchain(),
+                blockchainData.toObject()
+            );
+
+        console.log(
+            "Blockchain loaded from MongoDB"
+        );
 
     }
 
-} else {
+};
 
-    manCoin = new Blockchain();
+// Save Blockchain
+const saveBlockchain = async () => {
 
-}
+    await BlockchainModel.findOneAndUpdate(
+        {},
+        {
+            chain:
+                manCoin.chain,
+
+            difficulty:
+                manCoin.difficulty,
+
+            pendingTransactions:
+                manCoin.pendingTransactions,
+
+            miningReward:
+                manCoin.miningReward
+        },
+        {
+            upsert: true
+        }
+    );
+
+};
 
 // Home Route
 app.get("/", (req, res) => {
-    res.send("Welcome to ManCoin");
+
+    res.send(
+        "Welcome to ManCoin"
+    );
+
 });
 
 // View Blockchain
 app.get("/blocks", (req, res) => {
+
     res.json(manCoin);
+
 });
 
 // Wallet Balance
@@ -63,109 +114,102 @@ app.get("/balance/:address", (req, res) => {
         );
 
     res.json({
-        address: req.params.address,
+        address:
+            req.params.address,
         balance
     });
 
 });
 
-// Create Transaction
-app.post("/transaction", (req, res) => {
-
-    const {
-        fromAddress,
-        toAddress,
-        amount
-    } = req.body;
-
-    if (
-        !fromAddress ||
-        !toAddress ||
-        !amount
-    ) {
-        return res.status(400).json({
-            success: false,
-            message: "All fields are required"
-        });
-    }
-
-    manCoin.pendingTransactions.push({
-        fromAddress,
-        toAddress,
-        amount: Number(amount)
-    });
-
-    fs.writeFileSync(
-        "blockchain.json",
-        JSON.stringify(
-            manCoin,
-            null,
-            2
-        )
-    );
-
-    res.json({
-        success: true,
-        message:
-            "Transaction added successfully"
-    });
-
-});
-
-// Mine Block
-app.post("/mine", (req, res) => {
+// Create Signed Transaction
+app.post("/transaction", async (req, res) => {
 
     try {
 
-        const { minerAddress } =
-            req.body;
+        const {
+            fromAddress,
+            toAddress,
+            amount,
+            signature
+        } = req.body;
 
         if (
-            !minerAddress ||
-            minerAddress.trim() === ""
+            !fromAddress ||
+            !toAddress ||
+            !amount ||
+            !signature
         ) {
+
             return res.status(400).json({
                 success: false,
                 message:
-                    "Miner address is required"
+                    "All fields are required"
             });
+
         }
 
-        if (
-            manCoin.pendingTransactions.length === 0
-        ) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "No pending transactions to mine"
-            });
-        }
+        const transaction =
+            new Transaction(
+                fromAddress,
+                toAddress,
+                Number(amount)
+            );
 
-        manCoin.minePendingTransactions(
-            minerAddress
+        transaction.signature =
+            signature;
+
+        manCoin.createTransaction(
+            transaction
         );
 
-        fs.writeFileSync(
-            "blockchain.json",
-            JSON.stringify(
-                manCoin,
-                null,
-                2
-            )
-        );
+        await saveBlockchain();
 
         res.json({
             success: true,
             message:
-                "Block mined successfully",
-            minerAddress
+                "Signed transaction added successfully"
         });
 
     } catch (error) {
 
-        res.status(500).json({
+        res.status(400).json({
             success: false,
-            message: error.message
+            message:
+                error.message
+        });
+
+    }
+
+});
+
+// Mine Block
+app.post("/mine", async (req, res) => {
+
+    try {
+
+        const {
+            minerAddress
+        } = req.body;
+
+        manCoin
+            .minePendingTransactions(
+                minerAddress
+            );
+
+        await saveBlockchain();
+
+        res.json({
+            success: true,
+            message:
+                "Block mined successfully"
+        });
+
+    } catch (error) {
+
+        res.status(400).json({
+            success: false,
+            message:
+                error.message
         });
 
     }
@@ -173,8 +217,18 @@ app.post("/mine", (req, res) => {
 });
 
 // Start Server
-app.listen(5000, () => {
-    console.log(
-        "Server running on port 5000"
-    );
-});
+initializeBlockchain()
+    .then(() => {
+
+        app.listen(
+            process.env.PORT || 5000,
+            () => {
+
+                console.log(
+                    "Server running on port 5000"
+                );
+
+            }
+        );
+
+    });

@@ -5,8 +5,7 @@ import {
   FaExchangeAlt
 } from "react-icons/fa";
 import { FaWallet } from "react-icons/fa";
-
-
+import { FaKey } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 function Sidebar() {
@@ -67,6 +66,16 @@ function Sidebar() {
             Wallet
           </Link>
         </li>
+
+        <li>
+  <Link
+    to="/wallet-generator"
+    className="flex items-center gap-3"
+  >
+    <FaKey />
+    Wallet Generator
+  </Link>
+</li>
 
       </ul>
 

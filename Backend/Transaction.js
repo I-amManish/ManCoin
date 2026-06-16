@@ -18,17 +18,26 @@ class Transaction {
         ).toString();
     }
 
-    signTransaction(signingKey) {
+signTransaction(signingKey) {
 
-        const hashTx = this.calculateHash();
-
-        const sig = signingKey.sign(
-            hashTx,
-            "base64"
+    if (
+        signingKey.getPublic("hex") !==
+        this.fromAddress
+    ) {
+        throw new Error(
+            "You cannot sign transactions for other wallets"
         );
-
-        this.signature = sig.toDER("hex");
     }
+
+    const hashTx = this.calculateHash();
+
+    const sig = signingKey.sign(
+        hashTx,
+        "base64"
+    );
+
+    this.signature = sig.toDER("hex");
+}
 
     isValid() {
 
