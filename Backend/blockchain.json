@@ -1,0 +1,35 @@
+{
+  "chain": [
+    {
+      "index": 0,
+      "timestamp": 1781631378567,
+      "data": "Genesis Block",
+      "previousHash": "0",
+      "nonce": 0,
+      "hash": "a8ba6c91e609fa286a5687e233eb00400ede9afb604c2dcb6f9e1b48130ddf5b"
+    },
+    {
+      "index": 1,
+      "timestamp": 1781631407642,
+      "data": [
+        {
+          "fromAddress": "Manish",
+          "toAddress": "Bhanu",
+          "amount": 50
+        }
+      ],
+      "previousHash": "a8ba6c91e609fa286a5687e233eb00400ede9afb604c2dcb6f9e1b48130ddf5b",
+      "nonce": 5821,
+      "hash": "000787fb70f390dd69360024d3e72b34c783c72c0df1df37cd63c6c8ecb51e59"
+    }
+  ],
+  "difficulty": 3,
+  "pendingTransactions": [
+    {
+      "fromAddress": null,
+      "toAddress": "Bhanu",
+      "amount": 100
+    }
+  ],
+  "miningReward": 100
+}

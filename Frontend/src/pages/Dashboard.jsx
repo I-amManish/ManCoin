@@ -1,6 +1,29 @@
-import { FaCube, FaCoins } from "react-icons/fa";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer
+} from "recharts";
+
+const data = [
+  {
+    name: "Block 1",
+    transactions: 2,
+  },
+  {
+    name: "Block 2",
+    transactions: 2,
+  },
+  {
+    name: "Block 3",
+    transactions: 1,
+  },
+];
 
 function Dashboard() {
+
   return (
     <div className="p-8">
 
@@ -8,13 +31,21 @@ function Dashboard() {
         🚀 ManCoin Dashboard
       </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-4 gap-6 mb-10">
 
-        <div className="bg-slate-800 rounded-xl p-6 shadow-lg">
-          <FaCube size={30} />
+        <div className="bg-slate-800 p-6 rounded-xl">
+          <h2 className="text-xl">
+            Blocks
+          </h2>
 
-          <h2 className="text-xl mt-4">
-            Total Blocks
+          <p className="text-3xl font-bold mt-2">
+            4
+          </p>
+        </div>
+
+        <div className="bg-slate-800 p-6 rounded-xl">
+          <h2 className="text-xl">
+            Transactions
           </h2>
 
           <p className="text-3xl font-bold mt-2">
@@ -22,17 +53,55 @@ function Dashboard() {
           </p>
         </div>
 
-        <div className="bg-slate-800 rounded-xl p-6 shadow-lg">
-          <FaCoins size={30} />
-
-          <h2 className="text-xl mt-4">
-            Mining Rewards
+        <div className="bg-slate-800 p-6 rounded-xl">
+          <h2 className="text-xl">
+            Pending
           </h2>
 
           <p className="text-3xl font-bold mt-2">
-            400
+            1
           </p>
         </div>
+
+        <div className="bg-slate-800 p-6 rounded-xl">
+          <h2 className="text-xl">
+            Reward
+          </h2>
+
+          <p className="text-3xl font-bold mt-2">
+            100
+          </p>
+        </div>
+
+      </div>
+
+      <div className="bg-slate-800 p-4 rounded-xl">
+
+        <h2 className="text-xl font-bold mb-4">
+          Transactions Per Block
+        </h2>
+
+        <ResponsiveContainer
+          width="90%"
+          height={250}
+        >
+
+          <BarChart data={data}>
+
+            <XAxis dataKey="name" />
+
+            <YAxis />
+
+            <Tooltip />
+
+            <Bar
+              dataKey="transactions"
+              fill="#3B82F6"
+            />
+
+          </BarChart>
+
+        </ResponsiveContainer>
 
       </div>
 

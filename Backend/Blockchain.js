@@ -41,20 +41,21 @@ class Blockchain {
     return true;
   }
   createTransaction(transaction) {
-
     if (!transaction.isValid()) {
-        throw new Error(
-            "Invalid transaction"
-        );
+      throw new Error("Invalid transaction");
     }
 
-    this.pendingTransactions.push(
-        transaction
-    );
-}
+    this.pendingTransactions.push(transaction);
+  }
 
   minePendingTransactions(miningRewardAddress) {
-    const Block = require("./Block");
+    if (!miningRewardAddress || miningRewardAddress.trim() === "") {
+      throw new Error("Miner address is required");
+    }
+
+    if (this.pendingTransactions.length === 0) {
+      throw new Error("No pending transactions to mine");
+    }
 
     const block = new Block(
       this.chain.length,
@@ -72,35 +73,29 @@ class Blockchain {
       },
     ];
   }
-
   getBalanceOfAddress(address) {
-
     let balance = 0;
 
     for (const block of this.chain) {
+      if (!Array.isArray(block.data)) {
+        continue;
+      }
 
-        if (!Array.isArray(block.data)) {
-            continue;
+      for (const transaction of block.data) {
+        const amount = Number(transaction.amount);
+
+        if (transaction.fromAddress === address) {
+          balance -= amount;
         }
 
-        for (const transaction of block.data) {
-
-            if (
-                transaction.fromAddress === address
-            ) {
-                balance -= transaction.amount;
-            }
-
-            if (
-                transaction.toAddress === address
-            ) {
-                balance += transaction.amount;
-            }
+        if (transaction.toAddress === address) {
+          balance += amount;
         }
+      }
     }
 
     return balance;
-}
+  }
 }
 
 module.exports = Blockchain;

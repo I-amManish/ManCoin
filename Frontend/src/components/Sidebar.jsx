@@ -4,6 +4,10 @@ import {
   FaHammer,
   FaExchangeAlt
 } from "react-icons/fa";
+import { FaWallet } from "react-icons/fa";
+
+
+import { Link } from "react-router-dom";
 
 function Sidebar() {
   return (
@@ -15,27 +19,57 @@ function Sidebar() {
 
       <ul className="space-y-6">
 
-        <li className="flex items-center gap-3 cursor-pointer">
-          <FaChartPie />
-          Dashboard
+        <li>
+          <Link
+            to="/"
+            className="flex items-center gap-3 hover:text-blue-400 transition"
+          >
+            <FaChartPie />
+            Dashboard
+          </Link>
         </li>
 
-        <li className="flex items-center gap-3 cursor-pointer">
-          <FaCube />
-          Explorer
+        <li>
+          <Link
+            to="/explorer"
+            className="flex items-center gap-3 hover:text-blue-400 transition"
+          >
+            <FaCube />
+            Explorer
+          </Link>
         </li>
 
-        <li className="flex items-center gap-3 cursor-pointer">
-          <FaHammer />
-          Mine
+        <li>
+          <Link
+            to="/mine"
+            className="flex items-center gap-3 hover:text-blue-400 transition"
+          >
+            <FaHammer />
+            Mine
+          </Link>
         </li>
 
-        <li className="flex items-center gap-3 cursor-pointer">
-          <FaExchangeAlt />
-          Transaction
+        <li>
+          <Link
+            to="/transaction"
+            className="flex items-center gap-3 hover:text-blue-400 transition"
+          >
+            <FaExchangeAlt />
+            Transaction
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/wallet"
+            className="flex items-center gap-3"
+          >
+            <FaWallet />
+            Wallet
+          </Link>
         </li>
 
       </ul>
+
     </div>
   );
 }
