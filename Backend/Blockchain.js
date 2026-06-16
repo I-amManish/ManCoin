@@ -5,7 +5,7 @@ class Blockchain {
     this.chain = [this.createGenesisBlock()];
     this.difficulty = 3;
     this.pendingTransactions = [];
-    this.miningReward = 100;
+    this.miningReward = 1;
   }
 
   createGenesisBlock() {
@@ -24,7 +24,6 @@ class Blockchain {
   }
 
   addBlock(newBlock) {
-
     newBlock.previousHash =
       this.getLatestBlock().hash;
 
@@ -37,39 +36,77 @@ class Blockchain {
 
   isChainValid() {
 
-    for (
-      let i = 1;
-      i < this.chain.length;
-      i++
+  for (
+    let i = 1;
+    i < this.chain.length;
+    i++
+  ) {
+
+    const currentBlock =
+      this.chain[i];
+
+    const previousBlock =
+      this.chain[i - 1];
+
+    // Check if block links to previous block
+
+    if (
+      currentBlock.previousHash !==
+      previousBlock.hash
+    ) {
+      return false;
+    }
+
+    // Check hash exists
+
+    if (
+      !currentBlock.hash
+    ) {
+      return false;
+    }
+
+    // Validate transactions
+
+    if (
+      Array.isArray(
+        currentBlock.data
+      )
     ) {
 
-      const currentBlock =
-        this.chain[i];
-
-      const previousBlock =
-        this.chain[i - 1];
-
-      if (
-        currentBlock.hash !==
-        currentBlock.calculateHash()
+      for (
+        const tx of currentBlock.data
       ) {
-        return false;
-      }
 
-      if (
-        currentBlock.previousHash !==
-        previousBlock.hash
-      ) {
-        return false;
+        // Skip mining rewards
+
+        if (
+          tx.fromAddress === null
+        ) {
+          continue;
+        }
+
+        // Ensure transaction fields exist
+
+        if (
+          !tx.fromAddress ||
+          !tx.toAddress ||
+          !tx.amount
+        ) {
+          return false;
+        }
+
       }
 
     }
 
-    return true;
   }
 
-  createTransaction(transaction) {
+  return true;
+}
 
+  createTransaction(
+    transaction
+  ) {
     if (
       !transaction.fromAddress ||
       !transaction.toAddress
@@ -87,6 +124,20 @@ class Blockchain {
       );
     }
 
+    const senderBalance =
+      this.getBalanceOfAddress(
+        transaction.fromAddress
+      );
+
+    if (
+      senderBalance <
+      transaction.amount
+    ) {
+      throw new Error(
+        `Insufficient balance. Available: ${senderBalance} ManCoin`
+      );
+    }
+
     this.pendingTransactions.push(
       transaction
     );
@@ -95,7 +146,6 @@ class Blockchain {
   minePendingTransactions(
     miningRewardAddress
   ) {
-
     if (
       !miningRewardAddress ||
       miningRewardAddress.trim() === ""
@@ -105,35 +155,12 @@ class Blockchain {
       );
     }
 
-    if (
-      this.pendingTransactions.length === 0
-    ) {
-      throw new Error(
-        "No pending transactions to mine"
-      );
-    }
-
-    // Validate every transaction
-    for (
-      const tx of this.pendingTransactions
-    ) {
-
-      if (
-        tx.fromAddress !== null &&
-        typeof tx.isValid === "function"
-      ) {
-
-        if (!tx.isValid()) {
-
-          throw new Error(
-            "Invalid transaction found in block"
-          );
-
-        }
-
-      }
-
-    }
+    // Reward included in THIS block
+    this.pendingTransactions.push({
+      fromAddress: null,
+      toAddress: miningRewardAddress,
+      amount: this.miningReward,
+    });
 
     const block = new Block(
       this.chain.length,
@@ -143,27 +170,18 @@ class Blockchain {
 
     this.addBlock(block);
 
-    this.pendingTransactions = [
-      {
-        fromAddress: null,
-        toAddress:
-          miningRewardAddress,
-        amount:
-          this.miningReward,
-      },
-    ];
+    // Clear pending transactions
+    this.pendingTransactions = [];
   }
 
   getBalanceOfAddress(
     address
   ) {
-
     let balance = 0;
 
     for (
       const block of this.chain
     ) {
-
       if (
         !Array.isArray(block.data)
       ) {
@@ -173,7 +191,6 @@ class Blockchain {
       for (
         const transaction of block.data
       ) {
-
         const amount =
           Number(
             transaction.amount
@@ -192,14 +209,11 @@ class Blockchain {
         ) {
           balance += amount;
         }
-
       }
-
     }
 
     return balance;
   }
-
 }
 
 module.exports = Blockchain;

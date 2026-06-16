@@ -7,8 +7,13 @@ const ec = new EC("secp256k1");
 
 function Transaction() {
 
-  const [fromAddress, setFromAddress] =
-    useState("");
+  const [fromAddress] = useState(
+    localStorage.getItem("publicKey") || ""
+  );
+
+  const [privateKey] = useState(
+    localStorage.getItem("privateKey") || ""
+  );
 
   const [toAddress, setToAddress] =
     useState("");
@@ -16,23 +21,62 @@ function Transaction() {
   const [amount, setAmount] =
     useState("");
 
-  const [privateKey, setPrivateKey] =
-    useState("");
-
   const [message, setMessage] =
     useState("");
+
+  const [isSuccess, setIsSuccess] =
+    useState(false);
 
   const handleTransaction = async () => {
 
     if (
       !fromAddress ||
-      !toAddress ||
-      !amount ||
       !privateKey
     ) {
+      setIsSuccess(false);
+
       setMessage(
-        "Please fill all fields"
+        "Please generate a wallet first."
       );
+
+      return;
+    }
+
+    if (
+      !toAddress ||
+      !amount
+    ) {
+      setIsSuccess(false);
+
+      setMessage(
+        "Please enter receiver address and amount."
+      );
+
+      return;
+    }
+
+    if (
+      fromAddress.trim() ===
+      toAddress.trim()
+    ) {
+      setIsSuccess(false);
+
+      setMessage(
+        "You cannot send coins to yourself."
+      );
+
+      return;
+    }
+
+    if (
+      Number(amount) <= 0
+    ) {
+      setIsSuccess(false);
+
+      setMessage(
+        "Amount must be greater than 0."
+      );
+
       return;
     }
 
@@ -47,11 +91,15 @@ function Transaction() {
         key.getPublic("hex");
 
       if (
-        publicKey !== fromAddress
+        publicKey.trim() !==
+        fromAddress.trim()
       ) {
+        setIsSuccess(false);
+
         setMessage(
-          "Private key does not match From Address"
+          "Private key does not match wallet address."
         );
+
         return;
       }
 
@@ -75,20 +123,24 @@ function Transaction() {
             toAddress,
             amount:
               Number(amount),
-            signature
+            signature,
           }
         );
+
+      setIsSuccess(true);
 
       setMessage(
         res.data.message
       );
 
-      setFromAddress("");
       setToAddress("");
       setAmount("");
-      setPrivateKey("");
 
     } catch (error) {
+
+      console.error(error);
+
+      setIsSuccess(false);
 
       setMessage(
         error.response?.data?.message ||
@@ -106,31 +158,50 @@ function Transaction() {
         💸 Create Transaction
       </h1>
 
-      <div className="bg-slate-800 p-6 rounded-xl max-w-xl">
+      <div className="bg-slate-800 p-6 rounded-xl max-w-2xl">
+
+        {/* Sender Wallet */}
+
+        <div className="bg-slate-700 p-3 rounded-lg mb-4">
+
+          <p className="text-sm text-gray-400">
+            Sender Wallet
+          </p>
+
+          <p className="break-all">
+            {fromAddress
+              ? `${fromAddress.slice(
+                  0,
+                  20
+                )}...${fromAddress.slice(
+                  -10
+                )}`
+              : "No Wallet Found"}
+          </p>
+
+        </div>
+
+        {/* Receiver Address */}
 
         <input
           type="text"
-          placeholder="From Address"
-          value={fromAddress}
-          onChange={(e) =>
-            setFromAddress(
-              e.target.value
-            )
-          }
-          className="w-full p-3 rounded-lg bg-slate-700 mb-4"
-        />
-
-        <input
-          type="text"
-          placeholder="To Address"
+          placeholder="Receiver Address"
           value={toAddress}
           onChange={(e) =>
             setToAddress(
               e.target.value
             )
           }
-          className="w-full p-3 rounded-lg bg-slate-700 mb-4"
+          className="
+            w-full
+            p-3
+            rounded-lg
+            bg-slate-700
+            mb-4
+          "
         />
+
+        {/* Amount */}
 
         <input
           type="number"
@@ -141,20 +212,44 @@ function Transaction() {
               e.target.value
             )
           }
-          className="w-full p-3 rounded-lg bg-slate-700 mb-4"
+          className="
+            w-full
+            p-3
+            rounded-lg
+            bg-slate-700
+            mb-4
+          "
         />
 
-        <input
-          type="text"
-          placeholder="Private Key"
-          value={privateKey}
-          onChange={(e) =>
-            setPrivateKey(
-              e.target.value
-            )
-          }
-          className="w-full p-3 rounded-lg bg-slate-700 mb-4"
-        />
+        {/* Transaction Preview */}
+
+        <div className="bg-slate-700 p-4 rounded-lg mb-4">
+
+          <h2 className="font-bold mb-2">
+            Transaction Preview
+          </h2>
+
+          <p>
+            Sending:
+            <strong>
+              {" "}
+              {amount || 0} MC
+            </strong>
+          </p>
+
+          <p className="break-all">
+            To:
+            {toAddress
+              ? ` ${toAddress.slice(
+                  0,
+                  20
+                )}...`
+              : " No receiver selected"}
+          </p>
+
+        </div>
+
+        {/* Button */}
 
         <button
           onClick={
@@ -167,15 +262,31 @@ function Transaction() {
             py-3
             rounded-lg
             font-semibold
+            transition
           "
         >
           Send Signed Transaction
         </button>
 
+        {/* Message */}
+
         {message && (
-          <p className="mt-4">
+
+          <div
+            className={`
+              mt-4
+              p-3
+              rounded-lg
+              ${
+                isSuccess
+                  ? "bg-green-600"
+                  : "bg-red-600"
+              }
+            `}
+          >
             {message}
-          </p>
+          </div>
+
         )}
 
       </div>
