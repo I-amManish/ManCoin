@@ -6,7 +6,7 @@ function Network() {
 
   const [networkData, setNetworkData] =
     useState({
-      peers: 1,
+      peers: 0,
       blocks: 0,
       pending: 0,
       reward: 0,
@@ -29,21 +29,32 @@ function Network() {
             "http://localhost:5000/validate"
           );
 
+        const peerRes =
+          await axios.get(
+            "http://localhost:5000/peers"
+          );
+
         const blockchain =
           blocksRes.data;
 
         setNetworkData({
-          peers: 1,
+          peers:
+            peerRes.data.peers,
+
           blocks:
             blockchain.chain.length,
+
           pending:
             blockchain.pendingTransactions.length,
+
           reward:
             blockchain.miningReward,
+
           latestBlock:
             blockchain.chain[
               blockchain.chain.length - 1
             ].index,
+
           valid:
             validateRes.data.valid,
         });
@@ -70,6 +81,20 @@ function Network() {
       fetchNetworkData
     );
 
+    socket.on(
+      "peerCount",
+      (count) => {
+
+        setNetworkData(
+          (prev) => ({
+            ...prev,
+            peers: count,
+          })
+        );
+
+      }
+    );
+
     return () => {
 
       socket.off(
@@ -78,6 +103,10 @@ function Network() {
 
       socket.off(
         "receiveBlock"
+      );
+
+      socket.off(
+        "peerCount"
       );
 
     };
@@ -144,7 +173,6 @@ function Network() {
         </div>
 
         <div className="bg-slate-800 p-6 rounded-xl">
-
           <h2 className="text-xl">
             Chain Status
           </h2>
@@ -160,7 +188,6 @@ function Network() {
               ? "✅ Valid"
               : "❌ Invalid"}
           </p>
-
         </div>
 
       </div>

@@ -9,6 +9,7 @@ import {
 
 import { Link } from "react-router-dom";
 import { FaNetworkWired } from "react-icons/fa";
+import { FaClock } from "react-icons/fa";
 
 function Sidebar() {
   return (
@@ -140,6 +141,22 @@ function Sidebar() {
           >
             <FaNetworkWired />
             Network
+          </Link>
+        </li>
+
+        <li>
+          <Link
+            to="/pending"
+            className="
+      flex
+      items-center
+      gap-3
+      hover:text-blue-400
+      transition
+    "
+          >
+            <FaClock />
+            Pending
           </Link>
         </li>
       </ul>

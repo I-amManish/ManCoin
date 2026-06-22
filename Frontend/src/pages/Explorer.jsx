@@ -7,6 +7,9 @@ function Explorer() {
   const [blocks, setBlocks] =
     useState([]);
 
+  const [search, setSearch] =
+    useState("");
+
   const fetchBlocks =
     async () => {
 
@@ -57,6 +60,65 @@ function Explorer() {
 
   }, []);
 
+  const filteredBlocks =
+    blocks.filter((block) => {
+
+      if (!search)
+        return true;
+
+      const query =
+        search.toLowerCase();
+
+      if (
+        block.index
+          .toString()
+          .includes(query)
+      ) {
+        return true;
+      }
+
+      if (
+        block.hash
+          ?.toLowerCase()
+          .includes(query)
+      ) {
+        return true;
+      }
+
+      if (
+        block.previousHash
+          ?.toLowerCase()
+          .includes(query)
+      ) {
+        return true;
+      }
+
+      if (
+        Array.isArray(
+          block.data
+        )
+      ) {
+
+        return block.data.some(
+          (tx) =>
+            tx.fromAddress
+              ?.toLowerCase()
+              .includes(
+                query
+              ) ||
+            tx.toAddress
+              ?.toLowerCase()
+              .includes(
+                query
+              )
+        );
+
+      }
+
+      return false;
+
+    });
+
   return (
     <div className="p-8">
 
@@ -64,9 +126,32 @@ function Explorer() {
         📦 Blockchain Explorer
       </h1>
 
+      <input
+        type="text"
+        placeholder="Search Block #, Hash, Wallet Address..."
+        value={search}
+        onChange={(e) =>
+          setSearch(
+            e.target.value
+          )
+        }
+        className="
+          w-full
+          p-3
+          rounded-lg
+          bg-slate-800
+          text-white
+          mb-6
+        "
+      />
+
+      <p className="text-slate-400 mb-6">
+        Found {filteredBlocks.length} block(s)
+      </p>
+
       <div className="space-y-6">
 
-        {blocks.map((block) => (
+        {filteredBlocks.map((block) => (
 
           <div
             key={block.index}
@@ -85,9 +170,11 @@ function Explorer() {
               </h2>
 
               <span className="bg-blue-600 px-3 py-1 rounded-lg text-sm">
+
                 {Array.isArray(block.data)
                   ? block.data.length
                   : 0} Tx
+
               </span>
 
             </div>
@@ -95,20 +182,17 @@ function Explorer() {
             <div className="space-y-2 text-sm">
 
               <p>
-                🔗 <strong>Hash:</strong>
-                {" "}
+                🔗 <strong>Hash:</strong>{" "}
                 {block.hash?.slice(0, 20)}...
               </p>
 
               <p>
-                🔙 <strong>Previous:</strong>
-                {" "}
+                🔙 <strong>Previous:</strong>{" "}
                 {block.previousHash?.slice(0, 20)}...
               </p>
 
               <p>
-                ⚙️ <strong>Nonce:</strong>
-                {" "}
+                ⚙️ <strong>Nonce:</strong>{" "}
                 {block.nonce}
               </p>
 
@@ -140,35 +224,41 @@ function Explorer() {
                         {tx.fromAddress === null ? (
 
                           <div className="text-green-400 font-bold">
+
                             ⛏️ Mining Reward
                             <br />
                             +{tx.amount} MC
+
                           </div>
 
                         ) : (
 
                           <>
+
                             <p>
-                              💸
-                              {" "}
-                              {tx.amount}
-                              {" "}
-                              MC
+                              💸 {tx.amount} MC
                             </p>
 
                             <p className="text-xs text-slate-300 mt-1">
-                              From:
-                              {" "}
-                              {tx.fromAddress.slice(0, 12)}
-                              ...
+
+                              From:{" "}
+                              {tx.fromAddress.slice(
+                                0,
+                                12
+                              )}...
+
                             </p>
 
                             <p className="text-xs text-slate-300">
-                              To:
-                              {" "}
-                              {tx.toAddress.slice(0, 12)}
-                              ...
+
+                              To:{" "}
+                              {tx.toAddress.slice(
+                                0,
+                                12
+                              )}...
+
                             </p>
+
                           </>
 
                         )}

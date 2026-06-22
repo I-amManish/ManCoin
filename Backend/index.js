@@ -23,12 +23,41 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
-io.on("connection", (socket) => {
-  console.log("Peer connected:", socket.id);
 
-  socket.on("disconnect", () => {
-    console.log("Peer disconnected:", socket.id);
-  });
+let peerCount = 0;
+io.on("connection", (socket) => {
+
+  peerCount++;
+
+  console.log(
+    "Peer connected:",
+    socket.id
+  );
+
+  io.emit(
+    "peerCount",
+    peerCount
+  );
+
+  socket.on(
+    "disconnect",
+    () => {
+
+      peerCount--;
+
+      console.log(
+        "Peer disconnected:",
+        socket.id
+      );
+
+      io.emit(
+        "peerCount",
+        peerCount
+      );
+
+    }
+  );
+
 });
 
 let manCoin;
@@ -196,6 +225,23 @@ app.get("/validate", (req, res) => {
       message: "Validation failed",
     });
   }
+});
+
+app.get("/pending", (req, res) => {
+
+  res.json({
+    count: manCoin.pendingTransactions.length,
+    transactions: manCoin.pendingTransactions
+  });
+
+});
+
+app.get("/peers", (req, res) => {
+
+  res.json({
+    peers: peerCount
+  });
+
 });
 
 // Start Server

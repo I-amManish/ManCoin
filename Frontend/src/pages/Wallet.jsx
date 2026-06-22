@@ -2,62 +2,99 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 function Wallet() {
-  const [address, setAddress] = useState("");
-  const [balance, setBalance] = useState(0);
-  const [transactions, setTransactions] = useState([]);
-  const [message, setMessage] = useState("");
 
-  const fetchWalletData = async () => {
-    try {
-      const walletAddress =
-        localStorage.getItem("publicKey");
+  const [username, setUsername] =
+    useState("");
 
-      if (!walletAddress) {
-        setMessage(
-          "No wallet found. Generate a wallet first."
+  const [address, setAddress] =
+    useState("");
+
+  const [balance, setBalance] =
+    useState(0);
+
+  const [transactions, setTransactions] =
+    useState([]);
+
+  const [message, setMessage] =
+    useState("");
+
+  const fetchWalletData =
+    async () => {
+
+      try {
+
+        const walletAddress =
+          localStorage.getItem(
+            "publicKey"
+          );
+
+        const savedUsername =
+          localStorage.getItem(
+            "username"
+          );
+
+        setUsername(
+          savedUsername ||
+          "Unknown User"
         );
-        return;
+
+        if (!walletAddress) {
+
+          setMessage(
+            "No wallet found. Generate a wallet first."
+          );
+
+          return;
+
+        }
+
+        setAddress(
+          walletAddress
+        );
+
+        const balanceRes =
+          await axios.get(
+            `http://localhost:5000/balance/${walletAddress}`
+          );
+
+        setBalance(
+          balanceRes.data.balance
+        );
+
+        const txRes =
+          await axios.get(
+            `http://localhost:5000/transactions/${walletAddress}`
+          );
+
+        setTransactions(
+          txRes.data.reverse()
+        );
+
+        setMessage("");
+
+      } catch (error) {
+
+        console.error(
+          error
+        );
+
+        setMessage(
+          error.response?.data?.message ||
+          error.message
+        );
+
       }
 
-      setAddress(walletAddress);
-
-      const balanceRes =
-        await axios.get(
-          `http://localhost:5000/balance/${walletAddress}`
-        );
-
-      setBalance(
-        balanceRes.data.balance
-      );
-
-      const txRes =
-        await axios.get(
-          `http://localhost:5000/transactions/${walletAddress}`
-        );
-
-      setTransactions(
-        txRes.data.reverse()
-      );
-
-      setMessage("");
-
-    } catch (error) {
-
-      console.error(error);
-
-      setMessage(
-        error.response?.data?.message ||
-        error.message
-      );
-
-    }
-  };
+    };
 
   useEffect(() => {
+
     fetchWalletData();
+
   }, []);
 
   const copyAddress = () => {
+
     navigator.clipboard.writeText(
       address
     );
@@ -65,27 +102,35 @@ function Wallet() {
     alert(
       "Wallet address copied!"
     );
+
   };
 
-  const shortAddress = (addr) => {
-    if (!addr)
-      return "Mining Reward";
+  const shortAddress =
+    (addr) => {
 
-    return `${addr.slice(
-      0,
-      10
-    )}...${addr.slice(-8)}`;
-  };
+      if (!addr)
+        return "Mining Reward";
+
+      return `${addr.slice(
+        0,
+        10
+      )}...${addr.slice(-8)}`;
+
+    };
 
   const receivedAmount =
     transactions
       .filter(
         (tx) =>
-          tx.toAddress === address
+          tx.toAddress ===
+          address
       )
       .reduce(
         (sum, tx) =>
-          sum + Number(tx.amount),
+          sum +
+          Number(
+            tx.amount
+          ),
         0
       );
 
@@ -93,11 +138,15 @@ function Wallet() {
     transactions
       .filter(
         (tx) =>
-          tx.fromAddress === address
+          tx.fromAddress ===
+          address
       )
       .reduce(
         (sum, tx) =>
-          sum + Number(tx.amount),
+          sum +
+          Number(
+            tx.amount
+          ),
         0
       );
 
@@ -109,6 +158,20 @@ function Wallet() {
       </h1>
 
       <div className="bg-slate-800 p-6 rounded-xl">
+
+        {/* Username */}
+
+        <div className="bg-slate-700 p-4 rounded-lg mb-6">
+
+          <h2 className="text-gray-400">
+            Username
+          </h2>
+
+          <p className="text-2xl font-bold text-purple-400">
+            👤 {username}
+          </p>
+
+        </div>
 
         <div className="flex justify-between items-center">
 
@@ -133,13 +196,16 @@ function Wallet() {
 
         <p className="break-all text-sm bg-slate-700 p-3 rounded-lg mt-4">
           {address
-            ? shortAddress(address)
+            ? shortAddress(
+                address
+              )
             : "No wallet generated"}
         </p>
 
         <div className="grid grid-cols-3 gap-4 mt-6">
 
           <div className="bg-slate-700 p-4 rounded-lg">
+
             <p className="text-gray-400">
               Balance
             </p>
@@ -147,9 +213,11 @@ function Wallet() {
             <p className="text-3xl font-bold text-green-400">
               {balance} MC
             </p>
+
           </div>
 
           <div className="bg-slate-700 p-4 rounded-lg">
+
             <p className="text-gray-400">
               Received
             </p>
@@ -157,9 +225,11 @@ function Wallet() {
             <p className="text-3xl font-bold text-green-400">
               {receivedAmount} MC
             </p>
+
           </div>
 
           <div className="bg-slate-700 p-4 rounded-lg">
+
             <p className="text-gray-400">
               Sent
             </p>
@@ -167,6 +237,7 @@ function Wallet() {
             <p className="text-3xl font-bold text-red-400">
               {sentAmount} MC
             </p>
+
           </div>
 
         </div>
@@ -187,9 +258,11 @@ function Wallet() {
         </button>
 
         {message && (
+
           <div className="mt-4 bg-red-600 p-3 rounded-lg">
             {message}
           </div>
+
         )}
 
       </div>
@@ -214,7 +287,8 @@ function Wallet() {
               (tx, index) => {
 
                 const isReceived =
-                  tx.toAddress === address;
+                  tx.toAddress ===
+                  address;
 
                 return (
 
@@ -265,19 +339,25 @@ function Wallet() {
                     <div className="mt-3 text-sm space-y-1">
 
                       {tx.fromAddress && (
+
                         <p>
                           From:{" "}
-                          {shortAddress(
-                            tx.fromAddress
-                          )}
+                          {tx.fromAddress === address
+                            ? `👤 ${username}`
+                            : shortAddress(
+                                tx.fromAddress
+                              )}
                         </p>
+
                       )}
 
                       <p>
                         To:{" "}
-                        {shortAddress(
-                          tx.toAddress
-                        )}
+                        {tx.toAddress === address
+                          ? `👤 ${username}`
+                          : shortAddress(
+                              tx.toAddress
+                            )}
                       </p>
 
                     </div>
@@ -285,6 +365,7 @@ function Wallet() {
                   </div>
 
                 );
+
               }
             )}
 

@@ -7,7 +7,7 @@ import Transaction from "./pages/Transaction";
 import Wallet from "./pages/Wallet";
 import WalletGenerator from "./pages/WalletGenerator";
 import Network from "./pages/Network";
-
+import PendingTransactions from "./pages/PendingTransactions";
 import { Routes, Route } from "react-router-dom";
 
 function App() {
@@ -30,7 +30,10 @@ function App() {
           <Route path="/wallet-generator" element={<WalletGenerator />} />
 
           <Route path="/validator" element={<Validator />} />
+
           <Route path="/network" element={<Network />} />
+
+          <Route path="/pending" element={<PendingTransactions />} />
         </Routes>
       </div>
     </div>
