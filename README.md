@@ -2,9 +2,9 @@
 
 ## 📖 Overview
 
-ManCoin is a blockchain-based cryptocurrency system developed using the MERN stack and JavaScript. The project demonstrates the fundamental concepts of a public blockchain, including block creation, transaction management, proof-of-work mining, digital signatures, wallet generation, mining rewards, and blockchain validation.
+ManCoin is a blockchain-based cryptocurrency system developed using React.js, Node.js, Express.js, MongoDB, and Socket.IO. The project demonstrates the core concepts of a public blockchain, including block creation, transaction management, Proof of Work (PoW) mining, digital signatures, wallet generation, mining rewards, blockchain validation, real-time updates, and blockchain persistence.
 
-The goal of this project is to provide a simplified implementation of a public blockchain similar to Bitcoin while offering a modern web-based dashboard for interaction and visualization.
+The system provides a modern web-based dashboard that allows users to generate wallets, create signed transactions, mine blocks, monitor network activity, and explore blockchain data.
 
 ---
 
@@ -16,6 +16,8 @@ The goal of this project is to provide a simplified implementation of a public b
 * Secure transactions using cryptographic signatures.
 * Create wallet generation and balance management features.
 * Develop REST APIs for blockchain operations.
+* Store blockchain data persistently using MongoDB.
+* Enable real-time blockchain synchronization using Socket.IO.
 * Provide a user-friendly dashboard for blockchain interaction.
 
 ---
@@ -28,13 +30,18 @@ The goal of this project is to provide a simplified implementation of a public b
 * Vite
 * Tailwind CSS
 * Axios
+* React Router
 * React Icons
 * Recharts
+* Socket.IO Client
 
 ## Backend
 
 * Node.js
 * Express.js
+* MongoDB
+* Mongoose
+* Socket.IO
 * CORS
 * Crypto-JS
 * Elliptic Curve Cryptography
@@ -43,7 +50,7 @@ The goal of this project is to provide a simplified implementation of a public b
 
 # 🔗 Core Blockchain Features
 
-### 1. Block Creation
+## 1. Block Creation
 
 Each block contains:
 
@@ -54,31 +61,43 @@ Each block contains:
 * Nonce
 * Current Hash
 
-### 2. Blockchain Validation
+---
 
-The system verifies:
+## 2. Blockchain Validation
 
-* Block hash integrity
-* Previous hash linkage
-* Chain consistency
+The validator verifies:
 
-### 3. Proof of Work (PoW)
+* Previous Hash linkage
+* Blockchain integrity
+* Block consistency
+* Transaction structure validation
 
-Mining requires finding a hash that satisfies a predefined difficulty level.
+---
+
+## 3. Proof of Work (PoW)
+
+Mining requires finding a valid hash that satisfies the blockchain difficulty level.
 
 Example:
 
 0007ed8b1e43b38cde6e0253d3e2f70696db9c0077df8780170e28379b5c2206
 
-### 4. Transactions
+---
 
-Transactions include:
+## 4. Transactions
+
+Each transaction contains:
 
 * Sender Address
 * Receiver Address
 * Amount
+* Digital Signature
 
-### 5. Wallet Generation
+---
+
+## 5. Wallet Generation
+
+Wallets are generated using Elliptic Curve Cryptography (ECC).
 
 Each wallet contains:
 
@@ -86,21 +105,60 @@ Each wallet contains:
 * Public Key
 * Wallet Address
 
-### 6. Digital Signatures
+Wallet data is stored locally in the browser.
 
-Transactions are signed using elliptic curve cryptography to ensure authenticity and prevent unauthorized spending.
+---
 
-### 7. Mining Rewards
+## 6. Digital Signatures
 
-Miners receive rewards for successfully mining new blocks.
+Transactions are signed using the sender's private key.
 
-Current reward:
+The blockchain verifies:
 
-100 ManCoins
+* Transaction authenticity
+* Ownership of funds
+* Signature validity
 
-### 8. Balance Calculation
+---
 
-Wallet balances are calculated from the complete blockchain transaction history.
+## 7. Mining Rewards
+
+Miners receive rewards for successfully mining blocks.
+
+Current Reward:
+
+10 ManCoins
+
+---
+
+## 8. Balance Calculation
+
+Balances are calculated dynamically by scanning all blockchain transactions.
+
+---
+
+## 9. MongoDB Persistence
+
+The complete blockchain is stored inside MongoDB.
+
+Benefits:
+
+* Data survives server restarts
+* Blockchain state remains persistent
+* Faster blockchain recovery
+
+---
+
+## 10. Real-Time Updates
+
+Socket.IO provides real-time synchronization between connected clients.
+
+Updates include:
+
+* New Transactions
+* New Blocks
+* Wallet Updates
+* Dashboard Updates
 
 ---
 
@@ -118,11 +176,11 @@ Returns application status.
 
 GET /blocks
 
-Returns the complete blockchain.
+Returns complete blockchain data.
 
 ---
 
-## Check Wallet Balance
+## Wallet Balance
 
 GET /balance/:address
 
@@ -130,7 +188,7 @@ Returns wallet balance.
 
 Example:
 
-GET /balance/miner-address
+GET /balance/wallet-address
 
 ---
 
@@ -138,25 +196,96 @@ GET /balance/miner-address
 
 POST /transaction
 
-Request Body:
+Request:
 
 {
 "fromAddress": "wallet1",
 "toAddress": "wallet2",
-"amount": 50
+"amount": 50,
+"signature": "signature"
 }
 
 ---
 
-## Mine Pending Transactions
+## Mine Block
 
 POST /mine
 
-Request Body:
+Request:
 
 {
-"minerAddress": "miner-address"
+"minerAddress": "wallet-address"
 }
+
+---
+
+## Transaction History
+
+GET /transactions/:address
+
+Returns transaction history of a wallet.
+
+---
+
+## Validate Blockchain
+
+GET /validate
+
+Returns blockchain validation status.
+
+---
+
+# 📊 Dashboard Features
+
+* Blockchain Statistics
+* Total Blocks
+* Transaction Count
+* Pending Transactions
+* Mining Reward Display
+* Transactions Per Block Chart
+* Real-Time Updates
+
+---
+
+# 📦 Explorer Features
+
+* View All Blocks
+* Block Hash Display
+* Previous Hash Display
+* Nonce Display
+* Transaction Details
+* Mining Reward Visualization
+* Real-Time Blockchain Updates
+
+---
+
+# 💰 Wallet Features
+
+* Wallet Address Display
+* Balance Checker
+* Transaction History
+* Auto Refresh Updates
+
+---
+
+# 🔐 Validator Features
+
+* Blockchain Validation
+* Integrity Verification
+* Chain Status Monitoring
+
+---
+
+# 🌐 Network Monitor
+
+Displays:
+
+* Connected Network Status
+* Total Blocks
+* Pending Transactions
+* Mining Reward
+* Latest Block
+* Blockchain Status
 
 ---
 
@@ -166,65 +295,59 @@ ManCoin/
 
 ├── Backend/
 
-│   ├── Block.js
+│ ├── Block.js
 
-│   ├── Blockchain.js
+│ ├── Blockchain.js
 
-│   ├── Transaction.js
+│ ├── Transaction.js
 
-│   ├── Wallet.js
+│ ├── config/
 
-│   ├── index.js
+│ ├── models/
 
-│   └── package.json
+│ ├── index.js
+
+│ └── package.json
 
 │
 
 └── Frontend/
 
-```
 ├── src/
 
-│   ├── components/
+│ ├── components/
 
-│   ├── pages/
+│ ├── pages/
 
-│   ├── App.jsx
+│ ├── services/
 
-│   └── main.jsx
+│ ├── App.jsx
+
+│ └── main.jsx
 
 │
 
 └── package.json
-```
 
 ---
 
 # 🚀 Installation
 
-## Clone Repository
-
-git clone <repository-url>
-
-cd ManCoin
-
----
-
-## Backend Setup
+## Backend
 
 cd Backend
 
 npm install
 
-node index.js
+npm start
 
-Backend runs on:
+Backend URL:
 
 http://localhost:5000
 
 ---
 
-## Frontend Setup
+## Frontend
 
 cd Frontend
 
@@ -232,43 +355,34 @@ npm install
 
 npm run dev
 
-Frontend runs on:
+Frontend URL:
 
 http://localhost:5173
-
----
-
-# 📊 Dashboard Features
-
-* Blockchain Explorer
-* Wallet Balance Checker
-* Transaction Creation
-* Block Mining Interface
-* Blockchain Statistics Visualization
-* Responsive User Interface
 
 ---
 
 # 🔒 Security Features
 
 * SHA-256 Hashing
-* Elliptic Curve Cryptography
+* Elliptic Curve Cryptography (ECC)
 * Digital Signature Verification
-* Blockchain Integrity Validation
+* Blockchain Validation
 * Proof of Work Mining
+* Transaction Integrity Checks
 
 ---
 
 # 📈 Future Enhancements
 
-* MongoDB Persistence
-* Peer-to-Peer Network
-* Multi-Node Synchronization
+* True Multi-Node Blockchain Network
+* Peer Discovery System
 * Smart Contracts
-* Wallet Management System
+* Token Economy
 * User Authentication
-* Real-Time Blockchain Updates
-* Advanced Analytics Dashboard
+* Mobile Wallet
+* Explorer Search
+* Activity Feed
+* Advanced Blockchain Analytics
 
 ---
 
@@ -282,12 +396,17 @@ This project demonstrates practical implementation of:
 * Web Development
 * RESTful APIs
 * Secure Transaction Processing
+* Real-Time Communication
 
 ---
 
 # 👨‍💻 Developer
 
 Manish Kumar
+
+M.Tech (Computer Science)
+
+Govind Ballabh Pant University of Technology
 
 ManCoin Blockchain Project
 
