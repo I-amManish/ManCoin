@@ -2,9 +2,9 @@
 
 ## 📖 Overview
 
-ManCoin is a blockchain-based cryptocurrency system developed using React.js, Node.js, Express.js, MongoDB, and Socket.IO. The project demonstrates the core concepts of a public blockchain, including block creation, transaction management, Proof of Work (PoW) mining, digital signatures, wallet generation, mining rewards, blockchain validation, real-time updates, and blockchain persistence.
+ManCoin is a blockchain-based cryptocurrency system built using JavaScript, React, Node.js, Express, MongoDB, and Socket.IO. The project demonstrates the core concepts of a public blockchain, including Proof of Work (PoW) mining, digital signatures, wallet generation, transaction management, blockchain validation, peer-to-peer communication, and real-time blockchain monitoring.
 
-The system provides a modern web-based dashboard that allows users to generate wallets, create signed transactions, mine blocks, monitor network activity, and explore blockchain data.
+The system provides a modern web dashboard where users can generate wallets, mine blocks, create transactions, validate the blockchain, monitor network activity, and explore blockchain data in real time.
 
 ---
 
@@ -13,11 +13,10 @@ The system provides a modern web-based dashboard that allows users to generate w
 * Understand blockchain architecture and operation.
 * Implement a decentralized ledger system.
 * Demonstrate Proof of Work (PoW) consensus.
-* Secure transactions using cryptographic signatures.
+* Secure transactions using digital signatures.
 * Create wallet generation and balance management features.
 * Develop REST APIs for blockchain operations.
-* Store blockchain data persistently using MongoDB.
-* Enable real-time blockchain synchronization using Socket.IO.
+* Implement real-time blockchain updates.
 * Provide a user-friendly dashboard for blockchain interaction.
 
 ---
@@ -30,7 +29,7 @@ The system provides a modern web-based dashboard that allows users to generate w
 * Vite
 * Tailwind CSS
 * Axios
-* React Router
+* React Router DOM
 * React Icons
 * Recharts
 * Socket.IO Client
@@ -43,8 +42,14 @@ The system provides a modern web-based dashboard that allows users to generate w
 * Mongoose
 * Socket.IO
 * CORS
-* Crypto-JS
-* Elliptic Curve Cryptography
+* dotenv
+
+## Blockchain & Security
+
+* Crypto-JS (SHA-256 Hashing)
+* Elliptic Curve Cryptography (secp256k1)
+* Digital Signatures
+* Proof of Work (PoW)
 
 ---
 
@@ -54,39 +59,39 @@ The system provides a modern web-based dashboard that allows users to generate w
 
 Each block contains:
 
-* Index
+* Block Index
 * Timestamp
 * Transaction Data
-* Previous Block Hash
-* Nonce
+* Previous Hash
 * Current Hash
+* Nonce
 
 ---
 
 ## 2. Blockchain Validation
 
-The validator verifies:
+The validator checks:
 
-* Previous Hash linkage
-* Blockchain integrity
-* Block consistency
-* Transaction structure validation
+* Block integrity
+* Previous hash linkage
+* Transaction consistency
+* Chain validity
 
 ---
 
 ## 3. Proof of Work (PoW)
 
-Mining requires finding a valid hash that satisfies the blockchain difficulty level.
+Mining requires solving a cryptographic puzzle by generating a hash that satisfies the configured difficulty level.
 
 Example:
 
-0007ed8b1e43b38cde6e0253d3e2f70696db9c0077df8780170e28379b5c2206
+0002f87af0c64ef8ba8196ec780b364d3da70a36bcd73636d46bdfef058d8164
 
 ---
 
 ## 4. Transactions
 
-Each transaction contains:
+Transactions contain:
 
 * Sender Address
 * Receiver Address
@@ -95,70 +100,44 @@ Each transaction contains:
 
 ---
 
-## 5. Wallet Generation
+## 5. Wallet Generator
 
-Wallets are generated using Elliptic Curve Cryptography (ECC).
+Users can generate:
 
-Each wallet contains:
-
+* Username
 * Private Key
 * Public Key
 * Wallet Address
 
-Wallet data is stored locally in the browser.
+Wallet data is stored locally in browser localStorage.
 
 ---
 
 ## 6. Digital Signatures
 
-Transactions are signed using the sender's private key.
+Transactions are cryptographically signed using elliptic curve cryptography.
 
-The blockchain verifies:
+Benefits:
 
-* Transaction authenticity
-* Ownership of funds
-* Signature validity
+* Authentication
+* Integrity
+* Non-repudiation
 
 ---
 
 ## 7. Mining Rewards
 
-Miners receive rewards for successfully mining blocks.
+Miners receive ManCoin rewards after successfully mining blocks.
 
-Current Reward:
+Current reward:
 
-10 ManCoins
+1 ManCoin per block
 
 ---
 
 ## 8. Balance Calculation
 
-Balances are calculated dynamically by scanning all blockchain transactions.
-
----
-
-## 9. MongoDB Persistence
-
-The complete blockchain is stored inside MongoDB.
-
-Benefits:
-
-* Data survives server restarts
-* Blockchain state remains persistent
-* Faster blockchain recovery
-
----
-
-## 10. Real-Time Updates
-
-Socket.IO provides real-time synchronization between connected clients.
-
-Updates include:
-
-* New Transactions
-* New Blocks
-* Wallet Updates
-* Dashboard Updates
+Balances are calculated dynamically by scanning the entire blockchain transaction history.
 
 ---
 
@@ -180,15 +159,13 @@ Returns complete blockchain data.
 
 ---
 
-## Wallet Balance
+## Check Wallet Balance
 
 GET /balance/:address
 
-Returns wallet balance.
-
 Example:
 
-GET /balance/wallet-address
+GET /balance/04ab12cd...
 
 ---
 
@@ -196,14 +173,16 @@ GET /balance/wallet-address
 
 POST /transaction
 
-Request:
+Request Body:
 
+```json
 {
-"fromAddress": "wallet1",
-"toAddress": "wallet2",
-"amount": 50,
-"signature": "signature"
+  "fromAddress": "wallet1",
+  "toAddress": "wallet2",
+  "amount": 10,
+  "signature": "signature"
 }
+```
 
 ---
 
@@ -211,11 +190,13 @@ Request:
 
 POST /mine
 
-Request:
+Request Body:
 
+```json
 {
-"minerAddress": "wallet-address"
+  "minerAddress": "wallet-address"
 }
+```
 
 ---
 
@@ -223,7 +204,7 @@ Request:
 
 GET /transactions/:address
 
-Returns transaction history of a wallet.
+Returns all transactions related to a wallet.
 
 ---
 
@@ -235,44 +216,67 @@ Returns blockchain validation status.
 
 ---
 
+## Peer Information
+
+GET /peers
+
+Returns connected peer count.
+
+---
+
+# ⚡ Real-Time Features
+
+Socket.IO Events:
+
+## receiveTransaction
+
+Broadcasts new transactions to connected clients.
+
+## receiveBlock
+
+Broadcasts newly mined blocks to connected clients.
+
+Used by:
+
+* Dashboard
+* Explorer
+* Network Monitor
+
+---
+
 # 📊 Dashboard Features
 
-* Blockchain Statistics
 * Total Blocks
-* Transaction Count
+* Total Transactions
 * Pending Transactions
 * Mining Reward Display
-* Transactions Per Block Chart
+* Transaction Analytics Chart
 * Real-Time Updates
 
 ---
 
-# 📦 Explorer Features
+# 📦 Blockchain Explorer
+
+Features:
 
 * View All Blocks
-* Block Hash Display
-* Previous Hash Display
-* Nonce Display
-* Transaction Details
-* Mining Reward Visualization
-* Real-Time Blockchain Updates
+* Search Blocks
+* Search Wallet Addresses
+* Search Transaction Data
+* View Mining Rewards
+* Real-Time Block Updates
 
 ---
 
 # 💰 Wallet Features
 
-* Wallet Address Display
-* Balance Checker
+* Wallet Generator
+* Username Support
+* Wallet Balance
+* Sent Amount Statistics
+* Received Amount Statistics
 * Transaction History
-* Auto Refresh Updates
-
----
-
-# 🔐 Validator Features
-
-* Blockchain Validation
-* Integrity Verification
-* Chain Status Monitoring
+* Copy Wallet Address
 
 ---
 
@@ -280,7 +284,7 @@ Returns blockchain validation status.
 
 Displays:
 
-* Connected Network Status
+* Connected Peers
 * Total Blocks
 * Pending Transactions
 * Mining Reward
@@ -289,99 +293,127 @@ Displays:
 
 ---
 
+# 🔐 Blockchain Validator
+
+Checks:
+
+* Blockchain Integrity
+* Block Linking
+* Transaction Structure
+* Chain Consistency
+
+---
+
 # 📂 Project Structure
 
+```text
 ManCoin/
 
 ├── Backend/
-
-│ ├── Block.js
-
-│ ├── Blockchain.js
-
-│ ├── Transaction.js
-
-│ ├── config/
-
-│ ├── models/
-
-│ ├── index.js
-
-│ └── package.json
-
 │
+├── Blockchain.js
+├── Block.js
+├── Transaction.js
+├── Wallet.js
+├── index.js
+│
+├── models/
+├── config/
+│
+└── package.json
 
-└── Frontend/
+Frontend/
 
 ├── src/
-
-│ ├── components/
-
-│ ├── pages/
-
-│ ├── services/
-
-│ ├── App.jsx
-
-│ └── main.jsx
-
 │
-
-└── package.json
+├── components/
+│   └── Sidebar.jsx
+│
+├── pages/
+│   ├── Dashboard.jsx
+│   ├── Explorer.jsx
+│   ├── Mine.jsx
+│   ├── Transaction.jsx
+│   ├── Wallet.jsx
+│   ├── WalletGenerator.jsx
+│   ├── Validator.jsx
+│   └── Network.jsx
+│
+├── services/
+│   └── socket.js
+│
+├── App.jsx
+├── main.jsx
+└── index.css
+```
 
 ---
 
 # 🚀 Installation
 
-## Backend
+## Clone Repository
 
-cd Backend
-
-npm install
-
-npm start
-
-Backend URL:
-
-http://localhost:5000
+```bash
+git clone <repository-url>
+cd ManCoin
+```
 
 ---
 
-## Frontend
+## Backend Setup
 
-cd Frontend
-
+```bash
+cd Backend
 npm install
+npm start
+```
 
+Backend runs on:
+
+```text
+http://localhost:5000
+```
+
+---
+
+## Frontend Setup
+
+```bash
+cd Frontend
+npm install
 npm run dev
+```
 
-Frontend URL:
+Frontend runs on:
 
+```text
 http://localhost:5173
+```
 
 ---
 
 # 🔒 Security Features
 
 * SHA-256 Hashing
-* Elliptic Curve Cryptography (ECC)
-* Digital Signature Verification
-* Blockchain Validation
 * Proof of Work Mining
-* Transaction Integrity Checks
+* Digital Signatures
+* Elliptic Curve Cryptography
+* Blockchain Validation
+* Wallet Address Verification
 
 ---
 
 # 📈 Future Enhancements
 
-* True Multi-Node Blockchain Network
-* Peer Discovery System
+* Multi-Node Synchronization
 * Smart Contracts
-* Token Economy
-* User Authentication
-* Mobile Wallet
-* Explorer Search
+* Wallet Import / Export
+* Block Detail Modals
 * Activity Feed
+* Wallet Leaderboard
+* Dynamic Difficulty Adjustment
+* Transaction Fees
+* Mempool Monitoring
 * Advanced Blockchain Analytics
 
 ---
@@ -393,21 +425,20 @@ This project demonstrates practical implementation of:
 * Blockchain Technology
 * Cryptography
 * Distributed Systems
-* Web Development
-* RESTful APIs
-* Secure Transaction Processing
-* Real-Time Communication
+* Peer-to-Peer Communication
+* Secure Transactions
+* REST APIs
+* MERN Stack Development
+* Real-Time Web Applications
 
 ---
 
 # 👨‍💻 Developer
 
-Manish Kumar
+**Manish Kumar**
 
 M.Tech (Computer Science)
 
-Govind Ballabh Pant University of Technology
-
 ManCoin Blockchain Project
 
-Built for academic learning and blockchain technology exploration.
+Built for academic learning, blockchain research, and decentralized systems exploration.
