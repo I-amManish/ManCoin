@@ -12,27 +12,34 @@ import { Routes, Route } from "react-router-dom";
 
 function App() {
   return (
-    <div className="flex min-h-screen bg-slate-900 text-white">
+    <div
+      className="
+        flex
+        flex-col
+        md:flex-row
+        min-h-screen
+        bg-slate-900
+        text-white
+      "
+    >
       <Sidebar />
 
-      <div className="flex-1">
+      <div
+        className="
+          flex-1
+          w-full
+          overflow-x-hidden
+        "
+      >
         <Routes>
           <Route path="/" element={<Dashboard />} />
-
           <Route path="/explorer" element={<Explorer />} />
-
           <Route path="/mine" element={<Mine />} />
-
           <Route path="/transaction" element={<Transaction />} />
-
           <Route path="/wallet" element={<Wallet />} />
-
           <Route path="/wallet-generator" element={<WalletGenerator />} />
-
           <Route path="/validator" element={<Validator />} />
-
           <Route path="/network" element={<Network />} />
-
           <Route path="/pending" element={<PendingTransactions />} />
         </Routes>
       </div>

@@ -2,26 +2,46 @@
 
 ## 📖 Overview
 
-ManCoin is a blockchain-based cryptocurrency system built using JavaScript, React, Node.js, Express, MongoDB, and Socket.IO. The project demonstrates the core concepts of a public blockchain, including Proof of Work (PoW) mining, digital signatures, wallet generation, transaction management, blockchain validation, peer-to-peer communication, and real-time blockchain monitoring.
+ManCoin is a blockchain-based cryptocurrency platform developed as an M.Tech Computer Science project. The system demonstrates the core principles of blockchain technology including decentralized ledgers, proof-of-work mining, digital signatures, transaction validation, blockchain exploration, and wallet management.
 
-The system provides a modern web dashboard where users can generate wallets, mine blocks, create transactions, validate the blockchain, monitor network activity, and explore blockchain data in real time.
+The project provides a complete blockchain ecosystem with a React frontend and Node.js backend, enabling users to create wallets, send transactions, mine blocks, validate the blockchain, and monitor network activity in real time.
 
 ---
 
 # 🎯 Objectives
 
 * Understand blockchain architecture and operation.
-* Implement a decentralized ledger system.
+* Implement a public blockchain using JavaScript.
 * Demonstrate Proof of Work (PoW) consensus.
-* Secure transactions using digital signatures.
-* Create wallet generation and balance management features.
-* Develop REST APIs for blockchain operations.
-* Implement real-time blockchain updates.
-* Provide a user-friendly dashboard for blockchain interaction.
+* Secure transactions using Elliptic Curve Cryptography (ECC).
+* Develop a blockchain explorer for monitoring network activity.
+* Provide a user-friendly interface for blockchain interactions.
 
 ---
 
-# 🛠️ Technologies Used
+# 🏗️ System Architecture
+
+Frontend (React + Vite)
+
+⬇
+
+REST API + Socket.IO
+
+⬇
+
+Backend (Node.js + Express)
+
+⬇
+
+Blockchain Core
+
+⬇
+
+MongoDB Persistence
+
+---
+
+# 🛠️ Technology Stack
 
 ## Frontend
 
@@ -29,323 +49,163 @@ The system provides a modern web dashboard where users can generate wallets, min
 * Vite
 * Tailwind CSS
 * Axios
-* React Router DOM
-* React Icons
-* Recharts
 * Socket.IO Client
+* Recharts
+* React Icons
 
 ## Backend
 
 * Node.js
 * Express.js
+* Socket.IO
 * MongoDB
 * Mongoose
-* Socket.IO
-* CORS
-* dotenv
-
-## Blockchain & Security
-
-* Crypto-JS (SHA-256 Hashing)
-* Elliptic Curve Cryptography (secp256k1)
-* Digital Signatures
-* Proof of Work (PoW)
+* Crypto-JS
+* Elliptic (secp256k1)
 
 ---
 
-# 🔗 Core Blockchain Features
+# 🔐 Security Features
 
-## 1. Block Creation
+## Digital Signatures
 
-Each block contains:
+Every transaction is signed using the sender's private key and verified using the corresponding public key.
 
-* Block Index
-* Timestamp
-* Transaction Data
-* Previous Hash
-* Current Hash
-* Nonce
+## Elliptic Curve Cryptography (ECC)
 
----
+The project uses:
 
-## 2. Blockchain Validation
+secp256k1
 
-The validator checks:
+The same elliptic curve used in Bitcoin.
 
-* Block integrity
-* Previous hash linkage
-* Transaction consistency
-* Chain validity
+## SHA-256 Hashing
 
----
+Each block hash is generated using SHA-256 cryptographic hashing.
 
-## 3. Proof of Work (PoW)
+## Transaction Validation
 
-Mining requires solving a cryptographic puzzle by generating a hash that satisfies the configured difficulty level.
+* Signature verification
+* Sender balance verification
+* Wallet address validation
+* Self-transfer prevention
 
-Example:
+## Duplicate Transaction Protection
 
-0002f87af0c64ef8ba8196ec780b364d3da70a36bcd73636d46bdfef058d8164
+The blockchain prevents duplicate transactions from being added to the pending transaction pool.
 
----
+## Transaction ID (TxID)
 
-## 4. Transactions
-
-Transactions contain:
-
-* Sender Address
-* Receiver Address
-* Amount
-* Digital Signature
+Every transaction is assigned a unique transaction hash for tracking and verification.
 
 ---
 
-## 5. Wallet Generator
+# ⚙️ Core Features
 
-Users can generate:
+## Blockchain
 
-* Username
-* Private Key
-* Public Key
-* Wallet Address
+* Genesis Block
+* Block Creation
+* Block Hashing
+* Blockchain Validation
+* Proof of Work Mining
+* Mining Rewards
+* Dynamic Difficulty Adjustment
 
-Wallet data is stored locally in browser localStorage.
+## Transactions
 
----
+* Signed Transactions
+* Transaction Fees
+* Transaction IDs (TxID)
+* Balance Verification
+* Transaction History
 
-## 6. Digital Signatures
+## Wallet System
 
-Transactions are cryptographically signed using elliptic curve cryptography.
+* Wallet Generation
+* Public/Private Key Pair Creation
+* Wallet Balance Tracking
 
-Benefits:
+## Blockchain Explorer
 
-* Authentication
-* Integrity
-* Non-repudiation
+* Search Blocks
+* Search Wallet Addresses
+* Search Hashes
+* View Transactions
+* Block Details Modal
+* Real-Time Blockchain Updates
 
----
+## Network Monitoring
 
-## 7. Mining Rewards
+* Connected Peer Count
+* Live Network Status
+* Pending Transaction Tracking
 
-Miners receive ManCoin rewards after successfully mining blocks.
-
-Current reward:
-
-1 ManCoin per block
-
----
-
-## 8. Balance Calculation
-
-Balances are calculated dynamically by scanning the entire blockchain transaction history.
-
----
-
-# 🌐 REST API Endpoints
-
-## Home
-
-GET /
-
-Returns application status.
-
----
-
-## View Blockchain
-
-GET /blocks
-
-Returns complete blockchain data.
-
----
-
-## Check Wallet Balance
-
-GET /balance/:address
-
-Example:
-
-GET /balance/04ab12cd...
-
----
-
-## Create Transaction
-
-POST /transaction
-
-Request Body:
-
-```json
-{
-  "fromAddress": "wallet1",
-  "toAddress": "wallet2",
-  "amount": 10,
-  "signature": "signature"
-}
-```
-
----
-
-## Mine Block
-
-POST /mine
-
-Request Body:
-
-```json
-{
-  "minerAddress": "wallet-address"
-}
-```
-
----
-
-## Transaction History
-
-GET /transactions/:address
-
-Returns all transactions related to a wallet.
-
----
-
-## Validate Blockchain
-
-GET /validate
-
-Returns blockchain validation status.
-
----
-
-## Peer Information
-
-GET /peers
-
-Returns connected peer count.
-
----
-
-# ⚡ Real-Time Features
-
-Socket.IO Events:
-
-## receiveTransaction
-
-Broadcasts new transactions to connected clients.
-
-## receiveBlock
-
-Broadcasts newly mined blocks to connected clients.
-
-Used by:
-
-* Dashboard
-* Explorer
-* Network Monitor
-
----
-
-# 📊 Dashboard Features
+## Dashboard
 
 * Total Blocks
 * Total Transactions
 * Pending Transactions
-* Mining Reward Display
+* Mining Reward Statistics
 * Transaction Analytics Chart
-* Real-Time Updates
-
----
-
-# 📦 Blockchain Explorer
-
-Features:
-
-* View All Blocks
-* Search Blocks
-* Search Wallet Addresses
-* Search Transaction Data
-* View Mining Rewards
-* Real-Time Block Updates
-
----
-
-# 💰 Wallet Features
-
-* Wallet Generator
-* Username Support
-* Wallet Balance
-* Sent Amount Statistics
-* Received Amount Statistics
-* Transaction History
-* Copy Wallet Address
-
----
-
-# 🌐 Network Monitor
-
-Displays:
-
-* Connected Peers
-* Total Blocks
-* Pending Transactions
-* Mining Reward
-* Latest Block
-* Blockchain Status
-
----
-
-# 🔐 Blockchain Validator
-
-Checks:
-
-* Blockchain Integrity
-* Block Linking
-* Transaction Structure
-* Chain Consistency
 
 ---
 
 # 📂 Project Structure
 
-```text
-ManCoin/
+Backend/
 
-├── Backend/
-│
 ├── Blockchain.js
+
 ├── Block.js
+
 ├── Transaction.js
+
 ├── Wallet.js
+
 ├── index.js
-│
-├── models/
+
 ├── config/
-│
+
+│ └── db.js
+
+├── models/
+
+│ └── BlockchainModel.js
+
 └── package.json
 
 Frontend/
 
 ├── src/
-│
-├── components/
-│   └── Sidebar.jsx
-│
-├── pages/
-│   ├── Dashboard.jsx
-│   ├── Explorer.jsx
-│   ├── Mine.jsx
-│   ├── Transaction.jsx
-│   ├── Wallet.jsx
-│   ├── WalletGenerator.jsx
-│   ├── Validator.jsx
-│   └── Network.jsx
-│
-├── services/
-│   └── socket.js
-│
-├── App.jsx
-├── main.jsx
-└── index.css
-```
+
+│ ├── pages/
+
+│ │ ├── Dashboard.jsx
+
+│ │ ├── Explorer.jsx
+
+│ │ ├── Mine.jsx
+
+│ │ ├── Transaction.jsx
+
+│ │ ├── Wallet.jsx
+
+│ │ ├── Validator.jsx
+
+│ │ ├── Network.jsx
+
+│ │ └── PendingTransactions.jsx
+
+│ ├── components/
+
+│ │ ├── Sidebar.jsx
+
+│ │ └── BlockDetailsModal.jsx
+
+│ └── services/
+
+│ └── socket.js
 
 ---
 
@@ -358,13 +218,13 @@ git clone <repository-url>
 cd ManCoin
 ```
 
----
-
 ## Backend Setup
 
 ```bash
 cd Backend
+
 npm install
+
 npm start
 ```
 
@@ -374,13 +234,13 @@ Backend runs on:
 http://localhost:5000
 ```
 
----
-
 ## Frontend Setup
 
 ```bash
 cd Frontend
+
 npm install
+
 npm run dev
 ```
 
@@ -392,53 +252,97 @@ http://localhost:5173
 
 ---
 
-# 🔒 Security Features
+# 📡 API Endpoints
 
-* SHA-256 Hashing
-* Proof of Work Mining
-* Digital Signatures
-* Elliptic Curve Cryptography
-* Blockchain Validation
-* Wallet Address Verification
+## Blockchain
+
+GET /blocks
+
+GET /validate
+
+## Wallet
+
+GET /balance/:address
+
+GET /transactions/:address
+
+## Transactions
+
+POST /transaction
+
+## Mining
+
+POST /mine
+
+## Network
+
+GET /pending
+
+GET /peers
 
 ---
 
-# 📈 Future Enhancements
+# 📱 Responsive Design
 
-* Multi-Node Synchronization
+The application supports:
+
+* Desktop Devices
+* Tablets
+* Mobile Devices
+* Hamburger Navigation Menu
+* Responsive Dashboard
+* Responsive Blockchain Explorer
+
+---
+
+# 🔄 Workflow
+
+1. Generate Wallet
+2. Mine Initial Coins
+3. Create Transaction
+4. Sign Transaction
+5. Broadcast Transaction
+6. Mine Pending Transactions
+7. Add New Block
+8. Update Blockchain
+9. View Results in Explorer
+
+---
+
+# 📊 Future Enhancements
+
+* Peer-to-Peer Node Discovery
 * Smart Contracts
-* Wallet Import / Export
-* Block Detail Modals
-* Activity Feed
-* Wallet Leaderboard
-* Dynamic Difficulty Adjustment
-* Transaction Fees
-* Mempool Monitoring
-* Advanced Blockchain Analytics
+* Multi-Signature Wallets
+* IPFS Integration
+* Proof of Stake (PoS)
+* Blockchain Analytics Dashboard
 
 ---
 
-# 🎓 Academic Relevance
+# 🎓 Academic Significance
 
-This project demonstrates practical implementation of:
+This project demonstrates:
 
-* Blockchain Technology
+* Blockchain Fundamentals
 * Cryptography
 * Distributed Systems
-* Peer-to-Peer Communication
-* Secure Transactions
-* REST APIs
-* MERN Stack Development
-* Real-Time Web Applications
+* Consensus Algorithms
+* Secure Transaction Processing
+* Web-Based Blockchain Applications
 
 ---
 
-# 👨‍💻 Developer
+# 👨‍💻 Author
 
-**Manish Kumar**
+Manish Kumar
 
 M.Tech (Computer Science)
 
-ManCoin Blockchain Project
+Govind Ballabh Pant University of Technology
 
-Built for academic learning, blockchain research, and decentralized systems exploration.
+---
+
+# 📜 License
+
+This project is developed for academic and educational purposes.

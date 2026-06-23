@@ -34,7 +34,7 @@ class Blockchain {
     this.chain.push(newBlock);
   }
 
-  isChainValid() {
+isChainValid() {
 
   for (
     let i = 1;
@@ -48,7 +48,7 @@ class Blockchain {
     const previousBlock =
       this.chain[i - 1];
 
-    // Check if block links to previous block
+    // Check block linkage
 
     if (
       currentBlock.previousHash !==
@@ -60,7 +60,8 @@ class Blockchain {
     // Check hash exists
 
     if (
-      !currentBlock.hash
+      !currentBlock.hash ||
+      currentBlock.hash.length === 0
     ) {
       return false;
     }
@@ -85,12 +86,21 @@ class Blockchain {
           continue;
         }
 
-        // Ensure transaction fields exist
+        // Required fields
 
         if (
           !tx.fromAddress ||
           !tx.toAddress ||
           !tx.amount
+        ) {
+          return false;
+        }
+
+        // Address format check
+
+        if (
+          tx.fromAddress.length < 66 ||
+          tx.toAddress.length < 66
         ) {
           return false;
         }
@@ -107,14 +117,39 @@ class Blockchain {
   createTransaction(
     transaction
   ) {
+
     if (
       !transaction.fromAddress ||
       !transaction.toAddress
     ) {
       throw new Error(
-        "Transaction must include from and to address"
+        "Transaction must include sender and receiver"
       );
     }
+
+    // Address validation
+
+    if (
+      transaction.fromAddress.length < 66 ||
+      transaction.toAddress.length < 66
+    ) {
+      throw new Error(
+        "Invalid wallet address"
+      );
+    }
+
+    // Self-transfer prevention
+
+    if (
+      transaction.fromAddress ===
+      transaction.toAddress
+    ) {
+      throw new Error(
+        "Cannot send to same wallet"
+      );
+    }
+
+    // Signature validation
 
     if (
       !transaction.isValid()
@@ -124,14 +159,33 @@ class Blockchain {
       );
     }
 
+    // Duplicate transaction check
+
+    const duplicate =
+      this.pendingTransactions.some(
+        tx =>
+          tx.txId ===
+          transaction.txId
+      );
+
+    if (duplicate) {
+      throw new Error(
+        "Duplicate transaction detected"
+      );
+    }
+
     const senderBalance =
       this.getBalanceOfAddress(
         transaction.fromAddress
       );
 
+    const totalCost =
+      transaction.amount +
+      (transaction.fee || 0);
+
     if (
       senderBalance <
-      transaction.amount
+      totalCost
     ) {
       throw new Error(
         `Insufficient balance. Available: ${senderBalance} ManCoin`
@@ -146,6 +200,7 @@ class Blockchain {
   minePendingTransactions(
     miningRewardAddress
   ) {
+
     if (
       !miningRewardAddress ||
       miningRewardAddress.trim() === ""
@@ -155,11 +210,22 @@ class Blockchain {
       );
     }
 
-    // Reward included in THIS block
+    let totalFees = 0;
+
+    for (
+      const tx of this.pendingTransactions
+    ) {
+      totalFees += Number(
+        tx.fee || 0
+      );
+    }
+
     this.pendingTransactions.push({
       fromAddress: null,
       toAddress: miningRewardAddress,
-      amount: this.miningReward,
+      amount:
+        this.miningReward +
+        totalFees,
     });
 
     const block = new Block(
@@ -170,20 +236,31 @@ class Blockchain {
 
     this.addBlock(block);
 
-    // Clear pending transactions
     this.pendingTransactions = [];
+
+    // Optional difficulty increase
+
+    if (
+      this.chain.length % 5 === 0
+    ) {
+      this.difficulty++;
+    }
   }
 
   getBalanceOfAddress(
     address
   ) {
+
     let balance = 0;
 
     for (
       const block of this.chain
     ) {
+
       if (
-        !Array.isArray(block.data)
+        !Array.isArray(
+          block.data
+        )
       ) {
         continue;
       }
@@ -191,6 +268,7 @@ class Blockchain {
       for (
         const transaction of block.data
       ) {
+
         const amount =
           Number(
             transaction.amount
@@ -201,6 +279,14 @@ class Blockchain {
           address
         ) {
           balance -= amount;
+
+          if (
+            transaction.fee
+          ) {
+            balance -= Number(
+              transaction.fee
+            );
+          }
         }
 
         if (
@@ -209,7 +295,9 @@ class Blockchain {
         ) {
           balance += amount;
         }
+
       }
+
     }
 
     return balance;
