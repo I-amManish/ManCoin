@@ -198,27 +198,72 @@ app.post("/mine", async (req, res) => {
   }
 });
 
-app.get("/transactions/:address", (req, res) => {
-  const address = req.params.address;
-  const transactions = [];
+app.post("/transaction", async (req, res) => {
+  try {
+    const {
+      fromAddress,
+      toAddress,
+      amount,
+      message,
+      fee,
+      timestamp,
+      txId,
+      signature,
+    } = req.body;
 
-  for (const block of manCoin.chain) {
-    if (!Array.isArray(block.data)) continue;
+    const numericAmount = Number(amount);
+    const numericFee = Number(fee ?? 1);
+    const numericTimestamp = Number(timestamp);
 
-    for (const tx of block.data) {
-      if (
-        tx.fromAddress === address ||
-        tx.toAddress === address
-      ) {
-        transactions.push({
-          block: block.index,
-          ...tx,
-        });
-      }
+    if (
+      !fromAddress ||
+      !toAddress ||
+      !signature ||
+      !txId ||
+      !Number.isFinite(numericAmount) ||
+      numericAmount <= 0 ||
+      !Number.isFinite(numericFee) ||
+      numericFee < 0 ||
+      !Number.isFinite(numericTimestamp)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid transaction details",
+      });
     }
-  }
 
-  res.json(transactions);
+    const transaction = new Transaction(
+      fromAddress.trim(),
+      toAddress.trim(),
+      numericAmount,
+      message || "",
+      numericFee
+    );
+
+    // Important: use the exact values that were signed in the frontend
+    transaction.timestamp = numericTimestamp;
+    transaction.txId = txId;
+    transaction.signature = signature;
+
+    manCoin.createTransaction(transaction);
+
+    await saveBlockchain();
+
+    io.emit("receiveTransaction", transaction);
+
+    res.json({
+      success: true,
+      message: "Signed transaction added successfully",
+      transaction,
+    });
+  } catch (error) {
+    console.error("Transaction error:", error);
+
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
 });
 
 app.get("/validate", (req, res) => {

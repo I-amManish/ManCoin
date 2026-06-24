@@ -13,10 +13,9 @@ function Explorer() {
   const fetchBlocks = async () => {
     try {
       const res = await axios.get("http://localhost:5000/blocks");
-
-      setBlocks(res.data.chain);
+      setBlocks(res.data.chain || []);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -24,46 +23,38 @@ function Explorer() {
     fetchBlocks();
 
     socket.on("receiveBlock", fetchBlocks);
-
     socket.on("receiveTransaction", fetchBlocks);
 
     return () => {
-      socket.off("receiveBlock");
-      socket.off("receiveTransaction");
+      socket.off("receiveBlock", fetchBlocks);
+      socket.off("receiveTransaction", fetchBlocks);
     };
   }, []);
 
   const filteredBlocks = blocks.filter((block) => {
-    if (!search) return true;
+    if (!search.trim()) return true;
 
     const query = search.toLowerCase();
 
-    if (block.index?.toString().includes(query)) {
-      return true;
-    }
-
-    if (block.hash?.toLowerCase().includes(query)) {
-      return true;
-    }
-
-    if (block.previousHash?.toLowerCase().includes(query)) {
-      return true;
-    }
-
-    if (Array.isArray(block.data)) {
-      return block.data.some(
-        (tx) =>
-          tx.fromAddress?.toLowerCase().includes(query) ||
-          tx.toAddress?.toLowerCase().includes(query),
-      );
-    }
-
-    return false;
+    return (
+      block.index?.toString().includes(query) ||
+      block.hash?.toLowerCase().includes(query) ||
+      block.previousHash?.toLowerCase().includes(query) ||
+      (Array.isArray(block.data) &&
+        block.data.some(
+          (tx) =>
+            tx.fromAddress?.toLowerCase().includes(query) ||
+            tx.toAddress?.toLowerCase().includes(query) ||
+            tx.txId?.toLowerCase().includes(query)
+        ))
+    );
   });
 
   return (
-    <div className="p-8">
-      <h1 className="text-4xl font-bold mb-8">📦 Blockchain Explorer</h1>
+    <div className="p-4 text-slate-900 dark:text-white md:p-8">
+      <h1 className="mb-6 text-3xl font-bold md:mb-8 md:text-4xl">
+        📦 Blockchain Explorer
+      </h1>
 
       <input
         type="text"
@@ -71,23 +62,28 @@ function Explorer() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="
-              w-full
-              p-3
-              rounded-lg
-              bg-slate-800
-              text-white
-              mb-6
-              border
-              border-slate-700
-              focus:outline-none
-              focus:ring-2
-              focus:ring-cyan-500
-              focus:border-cyan-500
-              transition-all
-            "
+          mb-6
+          w-full
+          rounded-lg
+          border
+          border-slate-300
+          bg-white
+          p-3
+          text-slate-900
+          placeholder:text-slate-500
+          outline-none
+          transition-all
+          focus:border-cyan-500
+          focus:ring-2
+          focus:ring-cyan-500
+          dark:border-slate-700
+          dark:bg-slate-800
+          dark:text-white
+          dark:placeholder:text-slate-400
+        "
       />
 
-      <p className="text-slate-400 mb-6">
+      <p className="mb-6 text-slate-600 dark:text-slate-400">
         Found {filteredBlocks.length} block(s)
       </p>
 
@@ -97,35 +93,38 @@ function Explorer() {
             key={block.index}
             onClick={() => setSelectedBlock(block)}
             className="
-                bg-slate-800
-                rounded-xl
-                p-6
-                shadow-lg
-                cursor-pointer
-                hover:bg-slate-700
-                hover:scale-[1.02]
-                active:scale-[0.98]
-                hover:shadow-cyan-500/20
-                transition-all
-                duration-200
-              "
+              cursor-pointer
+              rounded-xl
+              bg-white
+              p-4
+              shadow-md
+              transition-all
+              duration-200
+              hover:scale-[1.01]
+              hover:shadow-lg
+              active:scale-[0.99]
+              dark:bg-slate-800
+              md:p-6
+            "
           >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Block #{block.index}</h2>
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <h2 className="text-xl font-bold md:text-2xl">
+                Block #{block.index}
+              </h2>
 
-              <span className="bg-blue-600 px-3 py-1 rounded-lg text-sm">
+              <span className="rounded-lg bg-blue-600 px-3 py-1 text-sm text-white">
                 {Array.isArray(block.data) ? block.data.length : 0} Tx
               </span>
             </div>
 
-            <div className="space-y-2 text-sm">
-              <p>
+            <div className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
+              <p className="break-all">
                 🔗 <strong>Hash:</strong> {block.hash?.slice(0, 20)}...
               </p>
 
-              <p>
-                🔙 <strong>Previous:</strong> {block.previousHash?.slice(0, 20)}
-                ...
+              <p className="break-all">
+                🔙 <strong>Previous:</strong>{" "}
+                {block.previousHash?.slice(0, 20)}...
               </p>
 
               <p>
@@ -135,47 +134,53 @@ function Explorer() {
 
             {Array.isArray(block.data) && block.data.length > 0 && (
               <div className="mt-6">
-                <h3 className="font-bold text-lg mb-3">Transactions</h3>
+                <h3 className="mb-3 text-lg font-bold">
+                  Transactions
+                </h3>
 
                 <div className="space-y-3">
                   {block.data.map((tx, index) => (
                     <div
-                      key={index}
+                      key={tx.txId || index}
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedTransaction(tx);
                       }}
                       className="
-                        bg-slate-700
-                        p-4
-                        rounded-lg
                         cursor-pointer
-                        hover:bg-slate-600
-                        hover:scale-[1.01]
-                        active:scale-[0.99]
+                        rounded-lg
+                        bg-slate-100
+                        p-4
                         transition-all
+                        hover:scale-[1.01]
+                        hover:bg-slate-200
+                        active:scale-[0.99]
+                        dark:bg-slate-700
+                        dark:hover:bg-slate-600
                       "
                     >
                       {tx.fromAddress === null ? (
-                        <div className="text-green-400 font-bold">
+                        <div className="font-bold text-green-600 dark:text-green-400">
                           ⛏️ Mining Reward
-                          <br />+{tx.amount} MC
+                          <br />
+                          +{tx.amount} MC
                         </div>
                       ) : (
                         <>
-                          <p>💸 {tx.amount} MC</p>
-                          <p className="text-sm text-yellow-400">
+                          <p className="font-semibold">
+                            💸 {tx.amount} MC
+                          </p>
+
+                          <p className="text-sm text-yellow-600 dark:text-yellow-400">
                             💰 Fee: {tx.fee ?? 0} MC
                           </p>
 
-                          <p className="text-xs text-slate-300 mt-1">
-                            From: {tx.fromAddress?.slice(0, 12)}
-                            ...
+                          <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                            From: {tx.fromAddress?.slice(0, 12)}...
                           </p>
 
-                          <p className="text-xs text-slate-300">
-                            To: {tx.toAddress?.slice(0, 12)}
-                            ...
+                          <p className="text-xs text-slate-600 dark:text-slate-300">
+                            To: {tx.toAddress?.slice(0, 12)}...
                           </p>
                         </>
                       )}
@@ -186,6 +191,12 @@ function Explorer() {
             )}
           </div>
         ))}
+
+        {filteredBlocks.length === 0 && (
+          <div className="rounded-xl bg-white p-6 text-center text-slate-600 shadow-md dark:bg-slate-800 dark:text-slate-400">
+            No blocks found for this search.
+          </div>
+        )}
       </div>
 
       <BlockDetailsModal

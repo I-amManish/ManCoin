@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { Routes, Route } from "react-router-dom";
+
 import Sidebar from "./components/Sidebar";
 import Validator from "./pages/Validator";
 import Dashboard from "./pages/Dashboard";
@@ -8,29 +11,25 @@ import Wallet from "./pages/Wallet";
 import WalletGenerator from "./pages/WalletGenerator";
 import Network from "./pages/Network";
 import PendingTransactions from "./pages/PendingTransactions";
-import { Routes, Route } from "react-router-dom";
 
 function App() {
-  return (
-    <div
-      className="
-        flex
-        flex-col
-        md:flex-row
-        min-h-screen
-        bg-slate-900
-        text-white
-      "
-    >
-      <Sidebar />
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem("theme") !== "light"
+  );
 
-      <div
-        className="
-          flex-1
-          w-full
-          overflow-x-hidden
-        "
-      >
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
+
+  return (
+    <div className="min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-white transition-colors duration-300">
+      <Sidebar
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+      />
+
+      <main className="min-h-screen md:ml-64">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/explorer" element={<Explorer />} />
@@ -42,7 +41,7 @@ function App() {
           <Route path="/network" element={<Network />} />
           <Route path="/pending" element={<PendingTransactions />} />
         </Routes>
-      </div>
+      </main>
     </div>
   );
 }

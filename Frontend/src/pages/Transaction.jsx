@@ -7,9 +7,13 @@ const ec = new EC("secp256k1");
 const TRANSACTION_FEE = 1;
 
 function Transaction() {
-  const [fromAddress] = useState(localStorage.getItem("publicKey") || "");
+  const [fromAddress] = useState(
+    localStorage.getItem("publicKey") || ""
+  );
 
-  const [privateKey] = useState(localStorage.getItem("privateKey") || "");
+  const [privateKey] = useState(
+    localStorage.getItem("privateKey") || ""
+  );
 
   const [toAddress, setToAddress] = useState("");
   const [amount, setAmount] = useState("");
@@ -57,41 +61,46 @@ function Transaction() {
         return;
       }
 
-      // Keep this hash aligned with your current backend Transaction.calculateHash()
-      const message = "";
+      // Must match Transaction.js exactly
+      const transactionMessage = "";
       const timestamp = Date.now();
 
       const txId = SHA256(
         fromAddress +
           toAddress.trim() +
           numericAmount +
-          message +
+          transactionMessage +
           TRANSACTION_FEE +
-          timestamp,
+          timestamp
       ).toString();
 
       const hashTx = SHA256(
         fromAddress +
           toAddress.trim() +
           numericAmount +
-          message +
+          transactionMessage +
           TRANSACTION_FEE +
           timestamp +
-          txId,
+          txId
       ).toString();
 
-      const signature = key.sign(hashTx, "base64").toDER("hex");
+      const signature = key
+        .sign(hashTx, "base64")
+        .toDER("hex");
 
-      const res = await axios.post("http://localhost:5000/transaction", {
-        fromAddress,
-        toAddress: toAddress.trim(),
-        amount: numericAmount,
-        message,
-        fee: TRANSACTION_FEE,
-        timestamp,
-        txId,
-        signature,
-      });
+      const res = await axios.post(
+        "http://localhost:5000/transaction",
+        {
+          fromAddress,
+          toAddress: toAddress.trim(),
+          amount: numericAmount,
+          message: transactionMessage,
+          fee: TRANSACTION_FEE,
+          timestamp,
+          txId,
+          signature,
+        }
+      );
 
       setIsSuccess(true);
       setMessage(res.data.message);
@@ -102,7 +111,9 @@ function Transaction() {
       console.error(error);
 
       setIsSuccess(false);
-      setMessage(error.response?.data?.message || "Transaction failed");
+      setMessage(
+        error.response?.data?.message || "Transaction failed"
+      );
     } finally {
       setLoading(false);
     }
@@ -111,31 +122,66 @@ function Transaction() {
   const totalCost = (Number(amount) || 0) + TRANSACTION_FEE;
 
   return (
-    <div className="p-4 md:p-8">
-      <h1 className="text-2xl md:text-4xl font-bold mb-6 md:mb-8">
+    <div className="p-4 text-slate-900 dark:text-white md:p-8">
+      <h1 className="mb-6 text-3xl font-bold md:mb-8 md:text-4xl">
         💸 Create Transaction
       </h1>
 
-      <div className="bg-slate-800 p-4 md:p-6 rounded-xl max-w-2xl w-full">
-        <div className="bg-slate-700 p-3 rounded-lg mb-4">
-          <p className="text-sm text-gray-400">Sender Wallet</p>
+      <div
+        className="
+          w-full
+          max-w-2xl
+          rounded-xl
+          bg-white
+          p-4
+          shadow-md
+          dark:bg-slate-800
+          md:p-6
+        "
+      >
+        {/* Sender wallet */}
+        <div className="mb-4 rounded-lg bg-slate-100 p-3 dark:bg-slate-700">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Sender Wallet
+          </p>
 
-          <p className="break-all text-sm md:text-base">
+          <p className="break-all text-sm text-slate-900 dark:text-white md:text-base">
             {fromAddress
               ? `${fromAddress.slice(0, 20)}...${fromAddress.slice(-10)}`
               : "No Wallet Found"}
           </p>
         </div>
 
+        {/* Receiver address */}
         <input
           type="text"
           placeholder="Receiver Address"
           value={toAddress}
           onChange={(e) => setToAddress(e.target.value)}
           disabled={loading}
-          className="w-full p-3 rounded-lg bg-slate-700 mb-4 disabled:opacity-50"
+          className="
+            mb-4
+            w-full
+            rounded-lg
+            border
+            border-slate-300
+            bg-slate-100
+            p-3
+            text-slate-900
+            outline-none
+            transition
+            focus:border-blue-500
+            focus:ring-2
+            focus:ring-blue-500
+            disabled:cursor-not-allowed
+            disabled:opacity-50
+            dark:border-slate-600
+            dark:bg-slate-700
+            dark:text-white
+          "
         />
 
+        {/* Amount */}
         <input
           type="number"
           min="0"
@@ -144,11 +190,33 @@ function Transaction() {
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           disabled={loading}
-          className="w-full p-3 rounded-lg bg-slate-700 mb-4 disabled:opacity-50"
+          className="
+            mb-4
+            w-full
+            rounded-lg
+            border
+            border-slate-300
+            bg-slate-100
+            p-3
+            text-slate-900
+            outline-none
+            transition
+            focus:border-blue-500
+            focus:ring-2
+            focus:ring-blue-500
+            disabled:cursor-not-allowed
+            disabled:opacity-50
+            dark:border-slate-600
+            dark:bg-slate-700
+            dark:text-white
+          "
         />
 
-        <div className="bg-slate-700 p-4 rounded-lg mb-4">
-          <h2 className="font-bold mb-3">Transaction Preview</h2>
+        {/* Transaction preview */}
+        <div className="mb-4 rounded-lg bg-slate-100 p-4 dark:bg-slate-700">
+          <h2 className="mb-3 font-bold">
+            Transaction Preview
+          </h2>
 
           <div className="space-y-2">
             <p>
@@ -163,7 +231,10 @@ function Transaction() {
 
             <p>
               📊 Total Cost:
-              <strong className="text-yellow-400"> {totalCost} MC</strong>
+              <strong className="text-yellow-600 dark:text-yellow-400">
+                {" "}
+                {totalCost} MC
+              </strong>
             </p>
 
             <p className="break-all text-sm md:text-base">
@@ -175,7 +246,21 @@ function Transaction() {
           </div>
         </div>
 
-        <div className="bg-yellow-900/20 border border-yellow-500 p-3 rounded-lg mb-4 text-sm">
+        {/* Fee information */}
+        <div
+          className="
+            mb-4
+            rounded-lg
+            border
+            border-yellow-400
+            bg-yellow-50
+            p-3
+            text-sm
+            text-yellow-900
+            dark:bg-yellow-900/20
+            dark:text-yellow-100
+          "
+        >
           💰 Network Fee:
           <strong> {TRANSACTION_FEE} MC</strong>
           <br />
@@ -185,14 +270,30 @@ function Transaction() {
         <button
           disabled={loading}
           onClick={handleTransaction}
-          className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all duration-200 shadow-lg px-6 py-3 rounded-lg font-semibold w-full md:w-auto"
+          className="
+            w-full
+            rounded-lg
+            bg-green-600
+            px-6
+            py-3
+            font-semibold
+            text-white
+            shadow-lg
+            transition-all
+            duration-200
+            hover:bg-green-700
+            active:scale-95
+            disabled:cursor-not-allowed
+            disabled:opacity-50
+            md:w-auto
+          "
         >
           {loading ? "Sending..." : "Send Signed Transaction"}
         </button>
 
         {message && (
           <div
-            className={`mt-4 p-3 rounded-lg ${
+            className={`mt-4 rounded-lg p-3 text-white ${
               isSuccess ? "bg-green-600" : "bg-red-600"
             }`}
           >

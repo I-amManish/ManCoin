@@ -2,21 +2,14 @@ import { useState } from "react";
 import axios from "axios";
 
 function Mine() {
-  const currentWallet =
-    localStorage.getItem("publicKey") || "";
+  const currentWallet = localStorage.getItem("publicKey") || "";
 
-  const [minerAddress, setMinerAddress] =
-    useState(currentWallet);
-
+  const [minerAddress, setMinerAddress] = useState(currentWallet);
   const [message, setMessage] = useState("");
-  const [isSuccess, setIsSuccess] =
-    useState(false);
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleMine = async () => {
     if (!minerAddress.trim()) {
-      setIsSuccess(false);
       setMessage("Miner address is required.");
       return;
     }
@@ -25,17 +18,13 @@ function Mine() {
     setMessage("");
 
     try {
-      const res = await axios.post(
-        "http://localhost:5000/mine",
-        {
-          minerAddress: minerAddress.trim(),
-        }
-      );
+      const res = await axios.post("http://localhost:5000/mine", {
+        minerAddress: minerAddress.trim(),
+      });
 
-      setIsSuccess(true);
       setMessage(res.data.message);
 
-      // Clear address after successful mining
+      // Remove address after successful mining
       setMinerAddress("");
 
       setTimeout(() => {
@@ -44,10 +33,8 @@ function Mine() {
     } catch (error) {
       console.error(error);
 
-      setIsSuccess(false);
       setMessage(
-        error.response?.data?.message ||
-          "Mining failed"
+        error.response?.data?.message || "Mining failed"
       );
     } finally {
       setLoading(false);
@@ -56,37 +43,46 @@ function Mine() {
 
   const copyAddress = async () => {
     if (!minerAddress.trim()) {
-      setIsSuccess(false);
-      setMessage("Enter a miner address to copy.");
+      setMessage("No miner address available to copy.");
       return;
     }
 
     try {
-      await navigator.clipboard.writeText(
-        minerAddress
-      );
-
-      setIsSuccess(true);
-      setMessage("Address copied!");
+      await navigator.clipboard.writeText(minerAddress);
+      setMessage("Miner address copied!");
     } catch {
-      setIsSuccess(false);
-      setMessage("Could not copy address.");
+      setMessage("Could not copy the address.");
     }
   };
 
   const useCurrentWallet = () => {
+    if (!currentWallet) {
+      setMessage("No wallet generated. Create a wallet first.");
+      return;
+    }
+
     setMinerAddress(currentWallet);
     setMessage("");
   };
 
   return (
-    <div className="p-4 md:p-8">
-      <h1 className="text-2xl md:text-4xl font-bold mb-6 md:mb-8">
+    <div className="p-4 text-slate-900 dark:text-white md:p-8">
+      <h1 className="mb-6 text-3xl font-bold md:mb-8 md:text-4xl">
         ⛏️ Mine Block
       </h1>
 
-      <div className="bg-slate-800 p-4 md:p-6 rounded-xl max-w-3xl">
-        <label className="block mb-2 font-semibold">
+      <div
+        className="
+          max-w-3xl
+          rounded-xl
+          bg-white
+          p-4
+          shadow-md
+          dark:bg-slate-800
+          md:p-6
+        "
+      >
+        <label className="mb-2 block font-semibold">
           Miner Address
         </label>
 
@@ -94,26 +90,63 @@ function Mine() {
           type="text"
           placeholder="Enter wallet address"
           value={minerAddress}
-          onChange={(e) =>
-            setMinerAddress(e.target.value)
-          }
           disabled={loading}
-          className="w-full p-3 rounded-lg bg-slate-700 outline-none mb-4 disabled:opacity-50"
+          onChange={(e) => setMinerAddress(e.target.value)}
+          className="
+            mb-4
+            w-full
+            rounded-lg
+            border
+            border-slate-300
+            bg-slate-100
+            p-3
+            text-slate-900
+            outline-none
+            transition
+            focus:border-blue-500
+            focus:ring-2
+            focus:ring-blue-500
+            disabled:cursor-not-allowed
+            disabled:opacity-60
+            dark:border-slate-600
+            dark:bg-slate-700
+            dark:text-white
+          "
         />
 
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={copyAddress}
             disabled={loading}
-            className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-4 py-2 rounded-lg active:scale-95 transition"
+            className="
+              rounded-lg
+              bg-green-600
+              px-4
+              py-2
+              text-white
+              transition
+              hover:bg-green-700
+              disabled:cursor-not-allowed
+              disabled:opacity-50
+            "
           >
             📋 Copy
           </button>
 
           <button
             onClick={useCurrentWallet}
-            disabled={loading || !currentWallet}
-            className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 px-4 py-2 rounded-lg active:scale-95 transition"
+            disabled={loading}
+            className="
+              rounded-lg
+              bg-purple-600
+              px-4
+              py-2
+              text-white
+              transition
+              hover:bg-purple-700
+              disabled:cursor-not-allowed
+              disabled:opacity-50
+            "
           >
             🔑 Use My Wallet
           </button>
@@ -121,42 +154,57 @@ function Mine() {
           <button
             onClick={handleMine}
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2 rounded-lg font-semibold active:scale-95 transition"
+            className="
+              rounded-lg
+              bg-blue-600
+              px-6
+              py-2
+              font-semibold
+              text-white
+              transition
+              hover:bg-blue-700
+              disabled:cursor-not-allowed
+              disabled:opacity-50
+            "
           >
-            {loading
-              ? "Mining..."
-              : "⛏️ Mine Block"}
+            {loading ? "⛏️ Mining..." : "⛏️ Mine Block"}
           </button>
         </div>
 
         {message && (
           <div
-            className={`mt-6 p-4 rounded-lg ${
-              isSuccess
-                ? "bg-green-900/40 border border-green-500"
-                : "bg-red-900/40 border border-red-500"
-            }`}
+            className="
+              mt-6
+              rounded-lg
+              border
+              border-blue-300
+              bg-blue-50
+              p-4
+              text-blue-800
+              dark:border-slate-600
+              dark:bg-slate-700
+              dark:text-green-400
+            "
           >
-            <p
-              className={
-                isSuccess
-                  ? "text-green-400"
-                  : "text-red-400"
-              }
-            >
-              {message}
-            </p>
+            {message}
           </div>
         )}
 
-        <div className="mt-6 bg-slate-700 p-4 rounded-lg">
-          <h2 className="font-bold mb-2">
+        <div
+          className="
+            mt-6
+            rounded-lg
+            bg-slate-100
+            p-4
+            dark:bg-slate-700
+          "
+        >
+          <h2 className="mb-2 font-bold">
             Current Wallet
           </h2>
 
-          <p className="break-all text-sm">
-            {currentWallet ||
-              "No wallet generated"}
+          <p className="break-all text-sm text-slate-700 dark:text-slate-300">
+            {currentWallet || "No wallet generated"}
           </p>
         </div>
       </div>

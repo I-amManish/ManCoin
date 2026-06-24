@@ -36,9 +36,7 @@ function Wallet() {
       ]);
 
       setBalance(balanceRes.data.balance);
-
-      const latestFirst = [...txRes.data].reverse();
-      setTransactions(latestFirst);
+      setTransactions([...txRes.data].reverse());
     } catch (error) {
       console.error(error);
 
@@ -60,6 +58,7 @@ function Wallet() {
 
     try {
       await navigator.clipboard.writeText(address);
+
       setCopied(true);
 
       setTimeout(() => {
@@ -97,57 +96,82 @@ function Wallet() {
     );
 
   return (
-    <div className="p-4 md:p-8">
-      <h1 className="text-2xl md:text-4xl font-bold mb-6 md:mb-8">
+    <div className="p-4 text-slate-900 dark:text-white md:p-8">
+      <h1 className="mb-6 text-3xl font-bold md:mb-8 md:text-4xl">
         💰 Wallet
       </h1>
 
-      <div className="bg-slate-800 p-4 md:p-6 rounded-xl">
-        <div className="bg-slate-700 p-4 rounded-lg mb-6">
-          <h2 className="text-gray-400">Username</h2>
+      {/* Wallet summary */}
+      <div className="rounded-xl bg-white p-4 shadow-md dark:bg-slate-800 md:p-6">
+        {/* Username */}
+        <div className="mb-6 rounded-lg bg-slate-100 p-4 dark:bg-slate-700">
+          <h2 className="text-slate-500 dark:text-slate-400">
+            Username
+          </h2>
 
-          <p className="text-xl md:text-2xl font-bold text-purple-400">
+          <p className="text-xl font-bold text-purple-600 dark:text-purple-400 md:text-2xl">
             👤 {username}
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-          <h2 className="text-xl font-bold">Wallet Address</h2>
+        {/* Address header */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-xl font-bold">
+            Wallet Address
+          </h2>
 
           <button
             onClick={copyAddress}
             disabled={!address}
-            className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition px-4 py-2 rounded-lg"
+            className="
+              rounded-lg
+              bg-green-600
+              px-4
+              py-2
+              text-white
+              transition
+              hover:bg-green-700
+              active:scale-95
+              disabled:cursor-not-allowed
+              disabled:opacity-50
+            "
           >
             {copied ? "✓ Copied" : "📋 Copy"}
           </button>
         </div>
 
-        <p className="break-all text-sm bg-slate-700 p-3 rounded-lg mt-4">
+        <p className="mt-4 break-all rounded-lg bg-slate-100 p-3 text-sm text-slate-800 dark:bg-slate-700 dark:text-slate-200">
           {address ? shortAddress(address) : "No wallet generated"}
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-          <div className="bg-slate-700 p-4 rounded-lg">
-            <p className="text-gray-400">Balance</p>
+        {/* Balance cards */}
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="rounded-lg bg-slate-100 p-4 dark:bg-slate-700">
+            <p className="text-slate-500 dark:text-slate-400">
+              Balance
+            </p>
 
-            <p className="text-3xl font-bold text-green-400">
+            <p className="text-3xl font-bold text-green-600 dark:text-green-400">
               {balance} MC
             </p>
           </div>
 
-          <div className="bg-slate-700 p-4 rounded-lg">
-            <p className="text-gray-400">Received</p>
+          <div className="rounded-lg bg-slate-100 p-4 dark:bg-slate-700">
+            <p className="text-slate-500 dark:text-slate-400">
+              Received
+            </p>
 
-            <p className="text-3xl font-bold text-green-400">
+            <p className="text-3xl font-bold text-green-600 dark:text-green-400">
               {receivedAmount} MC
             </p>
           </div>
 
-          <div className="bg-slate-700 p-4 rounded-lg">
-            <p className="text-gray-400">Sent + Fees</p>
+          <div className="rounded-lg bg-slate-100 p-4 dark:bg-slate-700">
+            <p className="text-slate-500 dark:text-slate-400">
+              Sent + Fees
+            </p>
 
-            <p className="text-3xl font-bold text-red-400">
+            <p className="text-3xl font-bold text-red-600 dark:text-red-400">
               {sentAmount} MC
             </p>
           </div>
@@ -156,29 +180,45 @@ function Wallet() {
         <button
           onClick={fetchWalletData}
           disabled={loading}
-          className="mt-6 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition px-6 py-3 rounded-lg font-semibold w-full sm:w-auto"
+          className="
+            mt-6
+            w-full
+            rounded-lg
+            bg-blue-600
+            px-6
+            py-3
+            font-semibold
+            text-white
+            transition
+            hover:bg-blue-700
+            active:scale-95
+            disabled:cursor-not-allowed
+            disabled:opacity-50
+            sm:w-auto
+          "
         >
           {loading ? "Refreshing..." : "Refresh Wallet"}
         </button>
 
         {message && (
-          <div className="mt-4 bg-red-600 p-3 rounded-lg">
+          <div className="mt-4 rounded-lg bg-red-600 p-3 text-white">
             {message}
           </div>
         )}
       </div>
 
+      {/* Transaction history */}
       <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">
+        <h2 className="mb-4 text-2xl font-bold">
           📜 Transaction History
         </h2>
 
         {loading ? (
-          <div className="bg-slate-800 p-4 rounded-xl text-slate-300">
+          <div className="rounded-xl bg-white p-4 text-slate-600 shadow-md dark:bg-slate-800 dark:text-slate-300">
             Loading wallet activity...
           </div>
         ) : transactions.length === 0 ? (
-          <div className="bg-slate-800 p-4 rounded-xl">
+          <div className="rounded-xl bg-white p-4 text-slate-600 shadow-md dark:bg-slate-800 dark:text-slate-300">
             No transactions found
           </div>
         ) : (
@@ -195,34 +235,43 @@ function Wallet() {
 
               const amountStyle =
                 isMiningReward || isReceived
-                  ? "text-green-400"
-                  : "text-red-400";
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-red-600 dark:text-red-400";
 
               return (
                 <div
                   key={tx.txId || `${tx.block}-${index}`}
-                  className="bg-slate-800 p-4 md:p-5 rounded-xl hover:bg-slate-750 transition"
+                  className="
+                    rounded-xl
+                    bg-white
+                    p-4
+                    shadow-md
+                    transition
+                    hover:shadow-lg
+                    dark:bg-slate-800
+                    md:p-5
+                  "
                 >
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h3 className="font-bold text-lg">{title}</h3>
+                      <h3 className="text-lg font-bold">
+                        {title}
+                      </h3>
 
-                      <p className="text-gray-400 text-sm">
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
                         Block #{tx.block} • {formatDate(tx.timestamp)}
                       </p>
                     </div>
 
-                    <div
-                      className={`${amountStyle} text-2xl font-bold`}
-                    >
+                    <div className={`${amountStyle} text-2xl font-bold`}>
                       {isMiningReward || isReceived ? "+" : "-"}
                       {tx.amount} MC
                     </div>
                   </div>
 
-                  <div className="mt-4 text-sm space-y-2 bg-slate-700/60 p-3 rounded-lg">
+                  <div className="mt-4 space-y-2 rounded-lg bg-slate-100 p-3 text-sm dark:bg-slate-700">
                     {!isMiningReward && (
-                      <p className="text-yellow-400">
+                      <p className="text-yellow-700 dark:text-yellow-400">
                         💰 Fee: {tx.fee ?? 0} MC
                       </p>
                     )}
@@ -244,13 +293,13 @@ function Wallet() {
                     </p>
 
                     {tx.txId && (
-                      <p className="break-all text-xs text-slate-400">
+                      <p className="break-all text-xs text-slate-500 dark:text-slate-400">
                         Tx ID: {shortAddress(tx.txId)}
                       </p>
                     )}
 
                     {!isMiningReward && (
-                      <p className="text-green-400 text-xs">
+                      <p className="text-xs text-green-600 dark:text-green-400">
                         ✓ Digitally signed transaction
                       </p>
                     )}

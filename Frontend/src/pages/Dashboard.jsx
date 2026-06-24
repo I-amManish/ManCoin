@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import ExportBlockchain from "../components/ExportBlockchain";
 
 import {
   BarChart,
@@ -22,20 +21,20 @@ function Dashboard() {
   });
 
   const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
 
   const fetchData = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:5000/blocks"
-      );
+      setLoading(true);
+      setMessage("");
+
+      const res = await axios.get("http://localhost:5000/blocks");
 
       const blockchain = res.data;
 
       const blocks = blockchain.chain?.length || 0;
-
-      const pending =
-        blockchain.pendingTransactions?.length || 0;
-
+      const pending = blockchain.pendingTransactions?.length || 0;
       const reward = blockchain.miningReward || 0;
 
       let transactions = 0;
@@ -64,101 +63,172 @@ function Dashboard() {
       setChartData(chart);
     } catch (error) {
       console.error("Dashboard data error:", error);
+
+      setMessage(
+        error.response?.data?.message ||
+          "Could not load blockchain dashboard data."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchData();
 
-    const refreshDashboard = () => {
-      fetchData();
-    };
-
-    socket.on("receiveTransaction", refreshDashboard);
-    socket.on("receiveBlock", refreshDashboard);
+    socket.on("receiveTransaction", fetchData);
+    socket.on("receiveBlock", fetchData);
 
     return () => {
-      socket.off("receiveTransaction", refreshDashboard);
-      socket.off("receiveBlock", refreshDashboard);
+      socket.off("receiveTransaction", fetchData);
+      socket.off("receiveBlock", fetchData);
     };
   }, []);
 
+  const dashboardCards = [
+    {
+      title: "Blocks",
+      value: stats.blocks,
+      icon: "📦",
+      valueColor: "text-blue-600 dark:text-blue-400",
+    },
+    {
+      title: "Transactions",
+      value: stats.transactions,
+      icon: "💸",
+      valueColor: "text-purple-600 dark:text-purple-400",
+    },
+    {
+      title: "Pending",
+      value: stats.pending,
+      icon: "⏳",
+      valueColor: "text-yellow-600 dark:text-yellow-400",
+    },
+    {
+      title: "Mining Reward",
+      value: `${stats.reward} MC`,
+      icon: "⛏️",
+      valueColor: "text-green-600 dark:text-green-400",
+    },
+  ];
+
   return (
-    <div className="p-4 md:p-8">
-      <h1 className="text-2xl md:text-4xl font-bold mb-6 md:mb-8">
-        🚀 ManCoin Dashboard
-      </h1>
+    <div className="p-4 text-slate-900 dark:text-white md:p-8">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between md:mb-8">
+        <div>
+          <h1 className="text-2xl font-bold md:text-4xl">
+            🚀 ManCoin Dashboard
+          </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-10">
-        <div className="bg-slate-800 p-5 md:p-6 rounded-xl">
-          <h2 className="text-lg md:text-xl">Blocks</h2>
-
-          <p className="text-3xl font-bold mt-2">
-            {stats.blocks}
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Live blockchain statistics and transaction activity.
           </p>
         </div>
 
-        <div className="bg-slate-800 p-5 md:p-6 rounded-xl">
-          <h2 className="text-lg md:text-xl">
-            Transactions
-          </h2>
-
-          <p className="text-3xl font-bold mt-2">
-            {stats.transactions}
-          </p>
-        </div>
-
-        <div className="bg-slate-800 p-5 md:p-6 rounded-xl">
-          <h2 className="text-lg md:text-xl">Pending</h2>
-
-          <p className="text-3xl font-bold mt-2">
-            {stats.pending}
-          </p>
-        </div>
-
-        <div className="bg-slate-800 p-5 md:p-6 rounded-xl">
-          <h2 className="text-lg md:text-xl">Mining Reward</h2>
-
-          <p className="text-3xl font-bold mt-2">
-            {stats.reward} MC
-          </p>
-        </div>
+        <button
+          onClick={fetchData}
+          disabled={loading}
+          className="
+            rounded-lg
+            bg-blue-600
+            px-5
+            py-3
+            font-semibold
+            text-white
+            transition
+            hover:bg-blue-700
+            active:scale-95
+            disabled:cursor-not-allowed
+            disabled:opacity-50
+          "
+        >
+          {loading ? "Refreshing..." : "↻ Refresh"}
+        </button>
       </div>
 
-      <div className="bg-slate-800 p-4 md:p-6 rounded-xl">
-        <h2 className="text-xl font-bold mb-4">
-          Transactions Per Block
-        </h2>
+      {message && (
+        <div className="mb-6 rounded-lg bg-red-600 p-3 text-white">
+          {message}
+        </div>
+      )}
 
-        <div className="h-[280px] md:h-[320px]">
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 xl:grid-cols-4 md:mb-10">
+        {dashboardCards.map((card) => (
+          <div
+            key={card.title}
+            className="
+              rounded-xl
+              bg-white
+              p-5
+              shadow-md
+              transition
+              hover:-translate-y-1
+              hover:shadow-lg
+              dark:bg-slate-800
+              md:p-6
+            "
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg text-slate-600 dark:text-slate-300 md:text-xl">
+                {card.title}
+              </h2>
+
+              <span className="text-2xl">{card.icon}</span>
+            </div>
+
+            <p className={`mt-3 text-3xl font-bold ${card.valueColor}`}>
+              {loading ? "..." : card.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-xl bg-white p-4 shadow-md dark:bg-slate-800 md:p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+            Transactions Per Block
+          </h2>
+
+          <span className="text-sm text-slate-500 dark:text-slate-400">
+            Live Chart
+          </span>
+        </div>
+
+        <div className="h-70 md:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
               <XAxis
                 dataKey="name"
-                tick={{ fill: "#cbd5e1", fontSize: 12 }}
+                tick={{
+                  fill: "#64748b",
+                  fontSize: 12,
+                }}
               />
 
               <YAxis
-                tick={{ fill: "#cbd5e1", fontSize: 12 }}
+                tick={{
+                  fill: "#64748b",
+                  fontSize: 12,
+                }}
               />
 
               <Tooltip
-  contentStyle={{
-    backgroundColor: "#1e293b",
-    border: "1px solid #475569",
-    borderRadius: "8px",
-    color: "#ffffff",
-  }}
-  labelStyle={{
-    color: "#ffffff",
-  }}
-  itemStyle={{
-    color: "#60a5fa",
-  }}
-  cursor={{
-    fill: "rgba(59, 130, 246, 0.15)",
-  }}
-/>
+                contentStyle={{
+                  backgroundColor: "#1e293b",
+                  border: "1px solid #475569",
+                  borderRadius: "8px",
+                  color: "#ffffff",
+                }}
+                labelStyle={{
+                  color: "#ffffff",
+                }}
+                itemStyle={{
+                  color: "#60a5fa",
+                }}
+                cursor={{
+                  fill: "rgba(59, 130, 246, 0.15)",
+                }}
+              />
 
               <Bar
                 dataKey="transactions"
@@ -168,10 +238,12 @@ function Dashboard() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </div>
 
-      <div className="mt-8">
-        <ExportBlockchain />
+        {!loading && chartData.length === 0 && (
+          <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+            No blocks are available yet.
+          </p>
+        )}
       </div>
     </div>
   );
