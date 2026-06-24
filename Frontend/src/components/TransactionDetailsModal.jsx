@@ -126,7 +126,7 @@ function TransactionDetailsModal({ transaction, onClose }) {
           {transaction.message && (
             <div className="rounded-lg bg-slate-700 p-4">
               <p className="text-slate-400">Message</p>
-              <p className="break-words">{transaction.message}</p>
+              <p className="wrap-break-word">{transaction.message}</p>
             </div>
           )}
 
