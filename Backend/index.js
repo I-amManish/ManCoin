@@ -12,7 +12,6 @@ const connectDB = require("./config/db");
 const BlockchainModel = require("./models/BlockchainModel");
 
 const app = express();
-
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -25,101 +24,80 @@ app.use(cors());
 app.use(express.json());
 
 let peerCount = 0;
-io.on("connection", (socket) => {
 
+io.on("connection", (socket) => {
   peerCount++;
 
-  console.log(
-    "Peer connected:",
-    socket.id
-  );
+  console.log("Peer connected:", socket.id);
 
-  io.emit(
-    "peerCount",
-    peerCount
-  );
+  io.emit("peerCount", peerCount);
 
-  socket.on(
-    "disconnect",
-    () => {
+  socket.on("disconnect", () => {
+    peerCount = Math.max(0, peerCount - 1);
 
-      peerCount--;
+    console.log("Peer disconnected:", socket.id);
 
-      console.log(
-        "Peer disconnected:",
-        socket.id
-      );
-
-      io.emit(
-        "peerCount",
-        peerCount
-      );
-
-    }
-  );
-
+    io.emit("peerCount", peerCount);
+  });
 });
 
 let manCoin;
 
-// Initialize Blockchain
 const initializeBlockchain = async () => {
   await connectDB();
 
-  let blockchainData = await BlockchainModel.findOne();
+  const blockchainData = await BlockchainModel.findOne();
 
   if (!blockchainData) {
     manCoin = new Blockchain();
 
-    blockchainData = new BlockchainModel({
+    await BlockchainModel.create({
       chain: manCoin.chain,
       difficulty: manCoin.difficulty,
       pendingTransactions: manCoin.pendingTransactions,
       miningReward: manCoin.miningReward,
     });
 
-    await blockchainData.save();
-
     console.log("New blockchain created");
-  } else {
-    manCoin = Object.assign(new Blockchain(), blockchainData.toObject());
-
-    console.log("Blockchain loaded from MongoDB");
+    return;
   }
+
+  manCoin = Object.assign(
+    new Blockchain(),
+    blockchainData.toObject()
+  );
+
+  console.log("Blockchain loaded from MongoDB");
 };
 
-// Save Blockchain
 const saveBlockchain = async () => {
   await BlockchainModel.findOneAndUpdate(
     {},
     {
       chain: manCoin.chain,
-
       difficulty: manCoin.difficulty,
-
       pendingTransactions: manCoin.pendingTransactions,
-
       miningReward: manCoin.miningReward,
     },
     {
       upsert: true,
-    },
+      returnDocument: "after",
+    }
   );
 };
 
-// Home Route
 app.get("/", (req, res) => {
   res.send("Welcome to ManCoin");
 });
 
-// View Blockchain
 app.get("/blocks", (req, res) => {
   res.json(manCoin);
 });
 
-// Wallet Balance
 app.get("/balance/:address", (req, res) => {
-  const balance = manCoin.getBalanceOfAddress(req.params.address);
+  const balance = manCoin.getBalanceOfAddress(
+    req.params.address
+  );
 
   res.json({
     address: req.params.address,
@@ -127,20 +105,50 @@ app.get("/balance/:address", (req, res) => {
   });
 });
 
-// Create Signed Transaction
 app.post("/transaction", async (req, res) => {
   try {
-    const { fromAddress, toAddress, amount, signature } = req.body;
+    const {
+      fromAddress,
+      toAddress,
+      amount,
+      message = "",
+      fee,
+      timestamp,
+      txId,
+      signature,
+    } = req.body;
 
-    if (!fromAddress || !toAddress || !amount || !signature) {
+    const numericAmount = Number(amount);
+    const numericFee = Number(fee ?? 1);
+    const numericTimestamp = Number(timestamp);
+
+    if (
+      !fromAddress ||
+      !toAddress ||
+      !signature ||
+      !txId ||
+      !Number.isFinite(numericAmount) ||
+      numericAmount <= 0 ||
+      !Number.isFinite(numericFee) ||
+      numericFee < 0 ||
+      !Number.isFinite(numericTimestamp)
+    ) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required",
+        message: "Invalid transaction details",
       });
     }
 
-    const transaction = new Transaction(fromAddress, toAddress, Number(amount));
+    const transaction = new Transaction(
+      fromAddress.trim(),
+      toAddress.trim(),
+      numericAmount,
+      message,
+      numericFee
+    );
 
+    transaction.timestamp = numericTimestamp;
+    transaction.txId = txId;
     transaction.signature = signature;
 
     manCoin.createTransaction(transaction);
@@ -154,14 +162,15 @@ app.post("/transaction", async (req, res) => {
       message: "Signed transaction added successfully",
     });
   } catch (error) {
+    console.error("Transaction error:", error.message);
+
     res.status(400).json({
       success: false,
-      message: error.message,
+      message: error.message || "Transaction failed",
     });
   }
 });
 
-// Mine Block
 app.post("/mine", async (req, res) => {
   try {
     const { minerAddress } = req.body;
@@ -170,34 +179,37 @@ app.post("/mine", async (req, res) => {
 
     await saveBlockchain();
 
-io.emit(
-    "receiveBlock",
-    manCoin.getLatestBlock()
-);
+    io.emit(
+      "receiveBlock",
+      manCoin.getLatestBlock()
+    );
 
-res.json({
-    success: true,
-    message:
-        "Block mined successfully"
-});
+    res.json({
+      success: true,
+      message: "Block mined successfully",
+    });
   } catch (error) {
+    console.error("Mining error:", error.message);
+
     res.status(400).json({
       success: false,
-      message: error.message,
+      message: error.message || "Mining failed",
     });
   }
 });
 
 app.get("/transactions/:address", (req, res) => {
   const address = req.params.address;
-
   const transactions = [];
 
   for (const block of manCoin.chain) {
     if (!Array.isArray(block.data)) continue;
 
     for (const tx of block.data) {
-      if (tx.fromAddress === address || tx.toAddress === address) {
+      if (
+        tx.fromAddress === address ||
+        tx.toAddress === address
+      ) {
         transactions.push({
           block: block.index,
           ...tx,
@@ -215,10 +227,12 @@ app.get("/validate", (req, res) => {
 
     res.json({
       valid: isValid,
-      message: isValid ? "Blockchain is valid" : "Blockchain is corrupted",
+      message: isValid
+        ? "Blockchain is valid"
+        : "Blockchain is corrupted",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Validation error:", error.message);
 
     res.status(500).json({
       valid: false,
@@ -228,27 +242,25 @@ app.get("/validate", (req, res) => {
 });
 
 app.get("/pending", (req, res) => {
-
   res.json({
     count: manCoin.pendingTransactions.length,
-    transactions: manCoin.pendingTransactions
+    transactions: manCoin.pendingTransactions,
   });
-
 });
 
 app.get("/peers", (req, res) => {
-
   res.json({
-    peers: peerCount
-  });
-
-});
-
-// Start Server
-initializeBlockchain().then(() => {
-  server.listen(process.env.PORT || 5000, () => {
-    console.log(
-  "P2P Node running on port 5000"
-);
+    peers: peerCount,
   });
 });
+
+initializeBlockchain()
+  .then(() => {
+    server.listen(process.env.PORT || 5000, () => {
+      console.log("P2P Node running on port 5000");
+    });
+  })
+  .catch((error) => {
+    console.error("Server startup failed:", error);
+    process.exit(1);
+  });

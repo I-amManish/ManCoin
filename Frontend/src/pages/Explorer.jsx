@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import socket from "../services/socket";
 import BlockDetailsModal from "../components/BlockDetailsModal";
+import TransactionDetailsModal from "../components/TransactionDetailsModal";
 
 function Explorer() {
   const [blocks, setBlocks] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedBlock, setSelectedBlock] = useState(null);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   const fetchBlocks = async () => {
     try {
@@ -139,11 +141,20 @@ function Explorer() {
                   {block.data.map((tx, index) => (
                     <div
                       key={index}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTransaction(tx);
+                      }}
                       className="
-                            bg-slate-700
-                            p-4
-                            rounded-lg
-                          "
+                        bg-slate-700
+                        p-4
+                        rounded-lg
+                        cursor-pointer
+                        hover:bg-slate-600
+                        hover:scale-[1.01]
+                        active:scale-[0.99]
+                        transition-all
+                      "
                     >
                       {tx.fromAddress === null ? (
                         <div className="text-green-400 font-bold">
@@ -153,6 +164,9 @@ function Explorer() {
                       ) : (
                         <>
                           <p>💸 {tx.amount} MC</p>
+                          <p className="text-sm text-yellow-400">
+                            💰 Fee: {tx.fee ?? 0} MC
+                          </p>
 
                           <p className="text-xs text-slate-300 mt-1">
                             From: {tx.fromAddress?.slice(0, 12)}
@@ -177,6 +191,11 @@ function Explorer() {
       <BlockDetailsModal
         block={selectedBlock}
         onClose={() => setSelectedBlock(null)}
+      />
+
+      <TransactionDetailsModal
+        transaction={selectedTransaction}
+        onClose={() => setSelectedTransaction(null)}
       />
     </div>
   );

@@ -34,90 +34,74 @@ class Blockchain {
     this.chain.push(newBlock);
   }
 
-isChainValid() {
-
-  for (
-    let i = 1;
-    i < this.chain.length;
-    i++
-  ) {
-
-    const currentBlock =
-      this.chain[i];
-
-    const previousBlock =
-      this.chain[i - 1];
-
-    // Check block linkage
-
-    if (
-      currentBlock.previousHash !==
-      previousBlock.hash
+  isChainValid() {
+    for (
+      let i = 1;
+      i < this.chain.length;
+      i++
     ) {
-      return false;
-    }
+      const currentBlock =
+        this.chain[i];
 
-    // Check hash exists
+      const previousBlock =
+        this.chain[i - 1];
 
-    if (
-      !currentBlock.hash ||
-      currentBlock.hash.length === 0
-    ) {
-      return false;
-    }
-
-    // Validate transactions
-
-    if (
-      Array.isArray(
-        currentBlock.data
-      )
-    ) {
-
-      for (
-        const tx of currentBlock.data
+      // Check block linkage
+      if (
+        currentBlock.previousHash !==
+        previousBlock.hash
       ) {
-
-        // Skip mining rewards
-
-        if (
-          tx.fromAddress === null
-        ) {
-          continue;
-        }
-
-        // Required fields
-
-        if (
-          !tx.fromAddress ||
-          !tx.toAddress ||
-          !tx.amount
-        ) {
-          return false;
-        }
-
-        // Address format check
-
-        if (
-          tx.fromAddress.length < 66 ||
-          tx.toAddress.length < 66
-        ) {
-          return false;
-        }
-
+        return false;
       }
 
+      // Check hash exists
+      if (
+        !currentBlock.hash ||
+        currentBlock.hash.length === 0
+      ) {
+        return false;
+      }
+
+      // Validate transactions
+      if (
+        Array.isArray(
+          currentBlock.data
+        )
+      ) {
+        for (
+          const tx of currentBlock.data
+        ) {
+          // Mining reward transaction
+          if (
+            tx.fromAddress === null
+          ) {
+            continue;
+          }
+
+          // Required fields
+          if (
+            !tx.fromAddress ||
+            !tx.toAddress ||
+            !tx.amount
+          ) {
+            return false;
+          }
+
+          // Address format check
+          if (
+            tx.fromAddress.length < 66 ||
+            tx.toAddress.length < 66
+          ) {
+            return false;
+          }
+        }
+      }
     }
 
+    return true;
   }
 
-  return true;
-}
-
-  createTransaction(
-    transaction
-  ) {
-
+  createTransaction(transaction) {
     if (
       !transaction.fromAddress ||
       !transaction.toAddress
@@ -126,8 +110,6 @@ isChainValid() {
         "Transaction must include sender and receiver"
       );
     }
-
-    // Address validation
 
     if (
       transaction.fromAddress.length < 66 ||
@@ -138,8 +120,6 @@ isChainValid() {
       );
     }
 
-    // Self-transfer prevention
-
     if (
       transaction.fromAddress ===
       transaction.toAddress
@@ -149,21 +129,15 @@ isChainValid() {
       );
     }
 
-    // Signature validation
-
-    if (
-      !transaction.isValid()
-    ) {
+    if (!transaction.isValid()) {
       throw new Error(
         "Invalid transaction signature"
       );
     }
 
-    // Duplicate transaction check
-
     const duplicate =
       this.pendingTransactions.some(
-        tx =>
+        (tx) =>
           tx.txId ===
           transaction.txId
       );
@@ -180,13 +154,10 @@ isChainValid() {
       );
 
     const totalCost =
-      transaction.amount +
-      (transaction.fee || 0);
+      Number(transaction.amount) +
+      Number(transaction.fee || 0);
 
-    if (
-      senderBalance <
-      totalCost
-    ) {
+    if (senderBalance < totalCost) {
       throw new Error(
         `Insufficient balance. Available: ${senderBalance} ManCoin`
       );
@@ -197,10 +168,29 @@ isChainValid() {
     );
   }
 
-  minePendingTransactions(
-    miningRewardAddress
-  ) {
+  // Returns true if this wallet already received a mining reward
+  hasAddressMined(address) {
+    for (const block of this.chain) {
+      if (!Array.isArray(block.data)) {
+        continue;
+      }
 
+      const alreadyMined =
+        block.data.some(
+          (tx) =>
+            tx.fromAddress === null &&
+            tx.toAddress === address
+        );
+
+      if (alreadyMined) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  minePendingTransactions(miningRewardAddress) {
     if (
       !miningRewardAddress ||
       miningRewardAddress.trim() === ""
@@ -210,22 +200,38 @@ isChainValid() {
       );
     }
 
-    let totalFees = 0;
+    const minerAddress =
+      miningRewardAddress.trim();
 
-    for (
-      const tx of this.pendingTransactions
-    ) {
-      totalFees += Number(
-        tx.fee || 0
+    // A wallet may receive only one mining reward
+    if (this.hasAddressMined(minerAddress)) {
+      throw new Error(
+        "This wallet has already mined once."
       );
     }
 
+    // Do not allow mining an empty block
+    if (this.pendingTransactions.length === 0) {
+      throw new Error(
+        "No pending transactions available to mine."
+      );
+    }
+
+    let totalFees = 0;
+
+    for (const tx of this.pendingTransactions) {
+      totalFees += Number(tx.fee || 0);
+    }
+
+    // Mining reward + collected transaction fees
     this.pendingTransactions.push({
       fromAddress: null,
-      toAddress: miningRewardAddress,
+      toAddress: minerAddress,
       amount:
         this.miningReward +
         totalFees,
+      fee: 0,
+      message: "Mining reward",
     });
 
     const block = new Block(
@@ -238,55 +244,33 @@ isChainValid() {
 
     this.pendingTransactions = [];
 
-    // Optional difficulty increase
-
-    if (
-      this.chain.length % 5 === 0
-    ) {
+    // Increase mining difficulty every 5 blocks
+    if (this.chain.length % 5 === 0) {
       this.difficulty++;
     }
   }
 
-  getBalanceOfAddress(
-    address
-  ) {
-
+  getBalanceOfAddress(address) {
     let balance = 0;
 
-    for (
-      const block of this.chain
-    ) {
-
-      if (
-        !Array.isArray(
-          block.data
-        )
-      ) {
+    for (const block of this.chain) {
+      if (!Array.isArray(block.data)) {
         continue;
       }
 
-      for (
-        const transaction of block.data
-      ) {
-
-        const amount =
-          Number(
-            transaction.amount
-          );
+      for (const transaction of block.data) {
+        const amount = Number(
+          transaction.amount
+        );
 
         if (
           transaction.fromAddress ===
           address
         ) {
           balance -= amount;
-
-          if (
-            transaction.fee
-          ) {
-            balance -= Number(
-              transaction.fee
-            );
-          }
+          balance -= Number(
+            transaction.fee || 0
+          );
         }
 
         if (
@@ -295,9 +279,7 @@ isChainValid() {
         ) {
           balance += amount;
         }
-
       }
-
     }
 
     return balance;
