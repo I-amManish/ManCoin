@@ -12,7 +12,7 @@ function Explorer() {
 
   const fetchBlocks = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/blocks");
+      const res = await axios.get("http://127.0.0.1:5000/blocks");
       setBlocks(res.data.chain || []);
     } catch (error) {
       console.error(error);

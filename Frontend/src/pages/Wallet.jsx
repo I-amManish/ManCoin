@@ -31,8 +31,8 @@ function Wallet() {
       setAddress(walletAddress);
 
       const [balanceRes, txRes] = await Promise.all([
-        axios.get(`http://localhost:5000/balance/${walletAddress}`),
-        axios.get(`http://localhost:5000/transactions/${walletAddress}`),
+        axios.get(`http://127.0.0.1:5000/balance/${walletAddress}`),
+        axios.get(`http://127.0.0.1:5000/transactions/${walletAddress}`),
       ]);
 
       setBalance(balanceRes.data.balance);

@@ -24,6 +24,7 @@ app.use(cors());
 app.use(express.json());
 
 let peerCount = 0;
+let manCoin;
 
 io.on("connection", (socket) => {
   peerCount++;
@@ -40,8 +41,6 @@ io.on("connection", (socket) => {
     io.emit("peerCount", peerCount);
   });
 });
-
-let manCoin;
 
 const initializeBlockchain = async () => {
   await connectDB();
@@ -95,14 +94,53 @@ app.get("/blocks", (req, res) => {
 });
 
 app.get("/balance/:address", (req, res) => {
-  const balance = manCoin.getBalanceOfAddress(
-    req.params.address
-  );
+  try {
+    const balance = manCoin.getBalanceOfAddress(
+      req.params.address
+    );
 
-  res.json({
-    address: req.params.address,
-    balance,
-  });
+    res.json({
+      address: req.params.address,
+      balance,
+    });
+  } catch (error) {
+    console.error("Balance error:", error.message);
+
+    res.status(500).json({
+      message: "Could not fetch wallet balance",
+    });
+  }
+});
+
+app.get("/transactions/:address", (req, res) => {
+  try {
+    const { address } = req.params;
+    const transactions = [];
+
+    for (const block of manCoin.chain) {
+      if (!Array.isArray(block.data)) continue;
+
+      for (const transaction of block.data) {
+        if (
+          transaction.fromAddress === address ||
+          transaction.toAddress === address
+        ) {
+          transactions.push({
+            ...transaction,
+            block: block.index,
+          });
+        }
+      }
+    }
+
+    res.json(transactions);
+  } catch (error) {
+    console.error("Transaction history error:", error.message);
+
+    res.status(500).json({
+      message: "Could not fetch transaction history",
+    });
+  }
 });
 
 app.post("/transaction", async (req, res) => {
@@ -147,6 +185,7 @@ app.post("/transaction", async (req, res) => {
       numericFee
     );
 
+    // Use the same values that were signed in Transaction.jsx
     transaction.timestamp = numericTimestamp;
     transaction.txId = txId;
     transaction.signature = signature;
@@ -160,6 +199,7 @@ app.post("/transaction", async (req, res) => {
     res.json({
       success: true,
       message: "Signed transaction added successfully",
+      transaction,
     });
   } catch (error) {
     console.error("Transaction error:", error.message);
@@ -179,10 +219,7 @@ app.post("/mine", async (req, res) => {
 
     await saveBlockchain();
 
-    io.emit(
-      "receiveBlock",
-      manCoin.getLatestBlock()
-    );
+    io.emit("receiveBlock", manCoin.getLatestBlock());
 
     res.json({
       success: true,
@@ -194,74 +231,6 @@ app.post("/mine", async (req, res) => {
     res.status(400).json({
       success: false,
       message: error.message || "Mining failed",
-    });
-  }
-});
-
-app.post("/transaction", async (req, res) => {
-  try {
-    const {
-      fromAddress,
-      toAddress,
-      amount,
-      message,
-      fee,
-      timestamp,
-      txId,
-      signature,
-    } = req.body;
-
-    const numericAmount = Number(amount);
-    const numericFee = Number(fee ?? 1);
-    const numericTimestamp = Number(timestamp);
-
-    if (
-      !fromAddress ||
-      !toAddress ||
-      !signature ||
-      !txId ||
-      !Number.isFinite(numericAmount) ||
-      numericAmount <= 0 ||
-      !Number.isFinite(numericFee) ||
-      numericFee < 0 ||
-      !Number.isFinite(numericTimestamp)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid transaction details",
-      });
-    }
-
-    const transaction = new Transaction(
-      fromAddress.trim(),
-      toAddress.trim(),
-      numericAmount,
-      message || "",
-      numericFee
-    );
-
-    // Important: use the exact values that were signed in the frontend
-    transaction.timestamp = numericTimestamp;
-    transaction.txId = txId;
-    transaction.signature = signature;
-
-    manCoin.createTransaction(transaction);
-
-    await saveBlockchain();
-
-    io.emit("receiveTransaction", transaction);
-
-    res.json({
-      success: true,
-      message: "Signed transaction added successfully",
-      transaction,
-    });
-  } catch (error) {
-    console.error("Transaction error:", error);
-
-    res.status(400).json({
-      success: false,
-      message: error.message,
     });
   }
 });
@@ -301,8 +270,10 @@ app.get("/peers", (req, res) => {
 
 initializeBlockchain()
   .then(() => {
-    server.listen(process.env.PORT || 5000, () => {
-      console.log("P2P Node running on port 5000");
+    const PORT = process.env.PORT || 5000;
+
+    server.listen(PORT, () => {
+      console.log(`P2P Node running on port ${PORT}`);
     });
   })
   .catch((error) => {

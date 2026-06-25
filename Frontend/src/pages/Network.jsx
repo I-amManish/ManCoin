@@ -21,9 +21,9 @@ function Network() {
       setMessage("");
 
       const [blocksRes, validateRes, peerRes] = await Promise.all([
-        axios.get("http://localhost:5000/blocks"),
-        axios.get("http://localhost:5000/validate"),
-        axios.get("http://localhost:5000/peers"),
+        axios.get("http://127.0.0.1:5000/blocks"),
+        axios.get("http://127.0.0.1:5000/validate"),
+        axios.get("http://127.0.0.1:5000/peers"),
       ]);
 
       const blockchain = blocksRes.data;
